@@ -21,13 +21,10 @@ fn main() {
 
     let status = Command::new("fasm")
                          .arg(input)
-                         .status();
-
-    match status {
-        Ok(status) if !status.success() => panic!("'fasm' exited with code: {}.", status.code().unwrap()),
-        Err(error) => {
-            let _ = writeln!(&mut io::stderr(), "An error occurred trying to run 'fasm': {}. Using preassembled binaries.", error);
-        },
-        _ => ()
+                         .status()
+                         .unwrap();
+                         
+    if !status.success() {
+        panic!("'fasm' exited with code: {}.", status.code().unwrap())
     }
 }
