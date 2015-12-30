@@ -9,7 +9,7 @@ virtual at ebx
     module_path dd ?
     init_name   dd ?
     user_data   dd ?
-    user_size   dd ?
+    user_len    dd ?
     last_error  dd ?
 end virtual
 
@@ -21,6 +21,8 @@ virtual at edi + functions
 end virtual
 
 
+
+start:
     push  ebx
     push  esi
     push  edi
@@ -53,8 +55,10 @@ end virtual
     mov   eax, ERROR_INIT_NOT_FOUND
     jmp   .end
 .call_init:
-    push  [user_size]
-    push  [user_data]
+    lea   edx, [user_len]
+    lea   ecx, [user_data]
+    push  edx
+    push  ecx
     call  eax
     add   esp, 8
     test  al, 1
@@ -72,5 +76,4 @@ end virtual
     ret   4
 
     align 4
-
 functions:

@@ -9,12 +9,20 @@ virtual at rbx
     module_path dq ?
     init_name   dq ?
     user_data   dq ?
-    user_size   dq ?
+    user_len    dq ?
     last_error  dd ?
+end virtual
+
+virtual at functions
+    LoadLibraryW   dq ?
+    FreeLibrary    dq ?
+    GetProcAddress dq ?
+    GetLastError   dq ?
 end virtual
 
 
 
+start:
     push  rbx
     push  rsi
     sub   rsp, 40
@@ -43,6 +51,7 @@ end virtual
     mov   eax, ERROR_INIT_NOT_FOUND
     jmp   .end
 .call_init:
+    lea   rdx, [user_len]
     lea   rcx, [user_data]
     call  rax
     test  al, 1
@@ -60,8 +69,4 @@ end virtual
     ret
 
     align 8
-
-    LoadLibraryW   dq ?
-    FreeLibrary    dq ?
-    GetProcAddress dq ?
-    GetLastError   dq ?
+functions:

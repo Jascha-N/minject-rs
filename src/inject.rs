@@ -1,25 +1,24 @@
-use std::{io, ptr, mem, slice};
+use std::{io, ptr, mem};
 use std::sync::{Once, ONCE_INIT};
 use std::path::Path;
-use std::ffi::OsString;
-use std::marker::PhantomData;
 use std::os::windows::prelude::*;
 use std::io::prelude::*;
-use std::os::raw::c_void;
 
-use {w, k32};
+use {w, k32, serde_json};
 use byteorder::{WriteBytesExt, NativeEndian};
+use serde::Serialize;
+use serde_json::builder::ArrayBuilder;
 
 use handle::Handle;
 
-struct RemoteMemory<'a, T: ?Sized> {
+struct RemoteMemory<'a> {
     process: &'a Handle,
-    memory: w::LPVOID,
-    data: PhantomData<T>
+    memory: *mut u8,
+    offset: usize
 }
 
-impl<'a, T: ?Sized> RemoteMemory<'a, T> {
-    fn new(process: &Handle, size: usize, executable: bool) -> io::Result<RemoteMemory<T>> {
+impl<'a> RemoteMemory<'a> {
+    fn new(process: &Handle, size: usize, executable: bool) -> io::Result<RemoteMemory> {
         if size == 0 {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "size is zero"));
         }
@@ -39,106 +38,213 @@ impl<'a, T: ?Sized> RemoteMemory<'a, T> {
 
         Ok(RemoteMemory {
             process: process,
-            memory: memory,
-            data: PhantomData
+            memory: memory as *mut _,
+            offset: 0
         })
     }
 
-    fn write(&self, data: &T) -> io::Result<()> {
-        if unsafe { k32::WriteProcessMemory(self.process.as_inner(), self.memory,
-                                            data as *const T as *const _,
-                                            mem::size_of_val(data) as w::SIZE_T,
-                                            ptr::null_mut()) } == w::FALSE
+    unsafe fn from_raw(process: &Handle, memory: *mut u8) -> RemoteMemory {
+        RemoteMemory {
+            process: process,
+            memory: memory,
+            offset: 0
+        }
+    }
+
+    unsafe fn write_inner<T>(&mut self, value: *const T, size: usize, align: usize) -> io::Result<*mut T> {
+        let offset = self.offset + (align - (self.offset % align)) % align;
+        let remote_ptr = self.memory.offset(offset as isize) as *mut T;
+
+        if size == 0 {
+            return Ok(remote_ptr)
+        }
+
+        if k32::WriteProcessMemory(self.process.as_inner(),
+                                   remote_ptr as w::LPVOID,
+                                   value as w::LPCVOID,
+                                   size as w::SIZE_T,
+                                   ptr::null_mut()) == w::FALSE
         {
             return Err(io::Error::last_os_error());
         }
 
-        Ok(())
+        self.offset = offset + size;
+
+        Ok(remote_ptr)
     }
 
-    fn read(&self, data: &mut T) -> io::Result<()> {
-        if unsafe { k32::ReadProcessMemory(self.process.as_inner(), self.memory,
-                                            data as *mut T as *mut _,
-                                            mem::size_of_val(data) as w::SIZE_T,
-                                            ptr::null_mut()) } == w::FALSE
+    fn write<T: Copy>(&mut self, value: &T) -> io::Result<*mut T> {
+        unsafe { self.write_inner(value, mem::size_of::<T>(), mem::align_of::<T>()) }
+    }
+
+    fn write_slice<T: Copy>(&mut self, value: &[T]) -> io::Result<*mut T> {
+        unsafe { self.write_inner(value.as_ptr(), mem::size_of_val(value), mem::align_of_val(value)) }
+    }
+
+    unsafe fn read<T: Copy>(&self, remote_ptr: *const T) -> io::Result<T> {
+        let mut value = mem::uninitialized::<T>();
+
+        if k32::ReadProcessMemory(self.process.as_inner(),
+                                  remote_ptr as w::LPVOID,
+                                  &mut value as *mut T as w::LPVOID,
+                                  mem::size_of::<T>() as w::SIZE_T,
+                                  ptr::null_mut()) == w::FALSE
         {
             return Err(io::Error::last_os_error());
         }
 
-        Ok(())
+        Ok(value)
     }
 
-    fn as_raw_ptr(&self) -> *mut c_void { self.memory }
-}
+    unsafe fn read_string(&self, remote_ptr: *const u8, length: usize) -> io::Result<String> {
+        if length == 0 {
+            return Ok(String::new())
+        }
 
-impl<'a, T> RemoteMemory<'a, T> {
-    fn new_sized(process: &Handle, executable: bool) -> io::Result<RemoteMemory<T>> {
-        RemoteMemory::new(process, mem::size_of::<T>(), executable)
+        let mut buffer = Vec::with_capacity(length);
+        buffer.set_len(length);
+
+        if k32::ReadProcessMemory(self.process.as_inner(),
+                                  remote_ptr as w::LPVOID,
+                                  buffer.as_mut_ptr() as w::LPVOID,
+                                  mem::size_of_val(&buffer[..]) as w::SIZE_T,
+                                  ptr::null_mut()) == w::FALSE
+        {
+            return Err(io::Error::last_os_error());
+        }
+
+        Ok(String::from_utf8_unchecked(buffer))
     }
-
-    fn as_ptr(&self) -> *mut T { self.memory as *mut _ }
 }
 
-impl<'a, T> RemoteMemory<'a, [T]> {
-    fn as_ptr(&self) -> *mut T { self.memory as *mut _ }
-}
-
-impl<'a, T: ?Sized> Drop for RemoteMemory<'a, T> {
+impl<'a> Drop for RemoteMemory<'a> {
     fn drop(&mut self) {
-        unsafe { k32::VirtualFreeEx(self.process.as_inner(), self.memory, 0, w::MEM_RELEASE); }
+        unsafe { k32::VirtualFreeEx(self.process.as_inner(), self.memory as w::LPVOID, 0, w::MEM_RELEASE); }
     }
 }
 
 
 
-pub struct Module<'a> {
-    path: OsString,
-    initializer: Option<(&'a [u8], Option<(&'a mut [u8], usize)>)>
+pub struct ModuleBuilder {
+    path: Vec<u16>
 }
 
-impl<'a> Module<'a> {
-    pub fn new<P: AsRef<Path>>(path: P) -> Module<'a> {
-        Module {
-            path: path.as_ref().into(),
-            initializer: None,
+pub struct ModuleBuilderWithInit {
+    path: Vec<u16>,
+    init: Vec<u8>,
+    args: ArrayBuilder
+}
+
+impl ModuleBuilder {
+    fn new(path: &Path) -> ModuleBuilder {
+        let path = path.as_os_str().encode_wide().chain(Some(0)).collect::<Vec<_>>();
+
+        ModuleBuilder {
+            path: path
         }
     }
 
-    pub unsafe fn with_init<P: AsRef<Path>>(path: P, name: &'a [u8]) -> Module<'a> {
-        Module {
-            path: path.as_ref().into(),
-            initializer: Some((name, None))
+    pub fn init<N: Into<Vec<u8>>>(self, name: N) -> ModuleBuilderWithInit {
+        let mut init = name.into();
+        init.push(0);
+
+        ModuleBuilderWithInit {
+            path: self.path,
+            init: init,
+            args: ArrayBuilder::new()
         }
     }
 
-    pub unsafe fn with_init_param<P: AsRef<Path>, T: Copy + 'static>(path: P, name: &'a [u8], param: &'a mut T) -> Module<'a> {
-        Module::with_init_param_slice(path.as_ref(), name, slice::from_raw_parts_mut(param, 1))
-    }
-
-    pub unsafe fn with_init_param_slice<P: AsRef<Path>, T: Copy + 'static>(path: P, name: &'a [u8], param: &'a mut [T]) -> Module<'a> {
-        Module::with_init_param_raw(path.as_ref(),
-                                    name,
-                                    slice::from_raw_parts_mut(param.as_mut_ptr() as *mut _,
-                                                              mem::size_of_val(param)),
-                                    param.len())
-    }
-
-    pub unsafe fn with_init_param_raw(path: &Path, name: &'a [u8], param: &'a mut [u8], length: usize) -> Module<'a> {
+    pub fn unwrap(self) -> Module {
         Module {
-            path: path.into(),
-            initializer: Some((name, Some((param, length))))
+            path: self.path,
+            init: None
         }
+    }
+}
+
+impl ModuleBuilderWithInit {
+    pub fn arg<T: Serialize>(self, arg: T) -> ModuleBuilderWithInit {
+        ModuleBuilderWithInit {
+            args: self.args.push(arg),
+            ..self
+        }
+    }
+
+    pub fn unwrap(self) -> Module {
+        Module {
+            path: self.path,
+            init: Some((self.init, serde_json::to_vec(&self.args.unwrap()).unwrap()))
+        }
+    }
+}
+
+pub struct Module {
+    path: Vec<u16>,
+    init: Option<(Vec<u8>, Vec<u8>)>
+}
+
+impl Module {
+    pub fn new<P: AsRef<Path>>(path: P) -> ModuleBuilder {
+        ModuleBuilder::new(path.as_ref())
+    }
+
+    fn copy_to_process<'a>(&self, process: &'a Handle) -> io::Result<(RemoteMemory<'a>, *mut ThreadParam)> {
+        let mut size = mem::size_of_val(&self.path[..]) +
+                       mem::size_of::<ThreadParam>();
+
+        if let &Some((ref init, ref args)) = &self.init {
+            size += mem::size_of_val(&init[..]) +
+                    mem::size_of_val(&args[..])
+        }
+
+        let mut remote = try!(RemoteMemory::new(process, size, false));
+        let module_path = try!(remote.write_slice(&self.path[..]));
+
+        let (init_name, user_data, user_len) = if let &Some((ref init, ref args)) = &self.init {
+            let init_name = try!(remote.write_slice(&init[..]));
+            let user_data = try!(remote.write_slice(&args[..]));
+
+            (init_name, user_data, args.len())
+        } else {
+            (ptr::null_mut(), ptr::null_mut(), 0)
+        };
+
+        let param = ThreadParam {
+            module_path: module_path,
+            init_name: init_name as *const _,
+            user_data: user_data,
+            user_len: user_len,
+            last_error: 0
+        };
+
+        let param = try!(remote.write(&param));
+
+        Ok((remote, param))
+    }
+}
+
+impl From<ModuleBuilder> for Module {
+    fn from(builder: ModuleBuilder) -> Module {
+        builder.unwrap()
+    }
+}
+
+impl From<ModuleBuilderWithInit> for Module {
+    fn from(builder: ModuleBuilderWithInit) -> Module {
+        builder.unwrap()
     }
 }
 
 
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 struct ThreadParam {
     module_path: w::LPCWSTR,
     init_name: w::LPCSTR,
-    user_data: *mut c_void,
-    user_size: usize,
+    user_data: *const u8,
+    user_len: usize,
     last_error: w::DWORD
 }
 
@@ -149,8 +255,8 @@ const ERROR_INIT_FAILED: w::DWORD = 3;
 
 pub struct Injector<'a> {
     process: &'a Handle,
-    code: RemoteMemory<'a, [u8]>,
-    data: RemoteMemory<'a, ThreadParam>
+    _code: RemoteMemory<'a>,
+    thread_proc: *const u8
 }
 
 impl<'a> Injector<'a> {
@@ -158,68 +264,23 @@ impl<'a> Injector<'a> {
         try!(check_same_architecture(process));
 
         let stub = get_stub();
-        let code = try!(RemoteMemory::new(process, stub.len(), true));
-        try!(code.write(stub));
-
-        let data = try!(RemoteMemory::new_sized(process, false));
+        let mut code = try!(RemoteMemory::new(process, mem::size_of_val(stub), true));
+        let thread_proc = try!(code.write_slice(stub));
 
         Ok(Injector {
              process: process,
-             code: code,
-             data: data
+             _code: code,
+             thread_proc: thread_proc
         })
     }
 
-    pub fn inject(&self, module: &mut Module) -> io::Result<()> {
-        let local_path = module.path.encode_wide().chain(Some(0)).collect::<Vec<_>>();
-        let remote_path = try!(RemoteMemory::new(self.process, local_path.len(), false));
-        try!(remote_path.write(&local_path[..]));
-
-        let initializer = match module.initializer {
-            Some((ref local_init, ref mut local_ud)) => {
-                let mut local_init = local_init.to_vec();
-                local_init.push(0);
-                let remote_init = try!(RemoteMemory::new(self.process, local_init.len(), false));
-                try!(remote_init.write(&local_init[..]));
-
-                let user_data = match *local_ud {
-                    Some((ref mut local_ud, ud_len)) => {
-                        let remote_ud = try!(RemoteMemory::new(self.process, mem::size_of_val(*local_ud), false));
-                        try!(remote_ud.write(*local_ud));
-                        Some((remote_ud, local_ud, ud_len))
-                    },
-                    None => None
-                };
-                Some((remote_init, user_data))
-            },
-            None => None
-        };
-
-        let mut param = match initializer {
-            Some((ref remote_init, ref user_data)) => ThreadParam {
-                module_path: remote_path.as_ptr(),
-                init_name: remote_init.as_ptr() as *const _,
-                user_data: user_data.as_ref().map(|&(ref remote_ud, _, _)| remote_ud.as_raw_ptr())
-                                             .unwrap_or(ptr::null_mut()),
-                user_size: user_data.as_ref().map(|&(_, _, ud_len)| ud_len)
-                                             .unwrap_or(0),
-                last_error: 0
-            },
-            None => ThreadParam {
-                module_path: remote_path.as_ptr(),
-                init_name: ptr::null(),
-                user_data: ptr::null_mut(),
-                user_size: 0,
-                last_error: 0
-            }
-        };
-
-        try!(self.data.write(&param));
+    pub fn inject(&self, module: &Module) -> io::Result<()> {
+        let (remote_data, param) = try!(module.copy_to_process(self.process));
 
         let thread = unsafe {
             k32::CreateRemoteThread(self.process.as_inner(), ptr::null_mut(), 0,
-                                    mem::transmute(self.code.as_ptr()), // Yikes!
-                                    self.data.as_ptr() as *mut _, 0, ptr::null_mut())
+                                    mem::transmute(self.thread_proc), // Yikes!
+                                    param as w::LPVOID, 0, ptr::null_mut())
         };
         if thread.is_null() {
             return Err(io::Error::last_os_error());
@@ -227,23 +288,29 @@ impl<'a> Injector<'a> {
         let thread = Handle::new(thread);
         try!(thread.wait());
 
-        // Make sure the remote memory has not been freed before this point.
-        mem::drop(remote_path);
-
         let mut exit_code = unsafe { mem::uninitialized() };
         if unsafe { k32::GetExitCodeThread(thread.as_inner(), &mut exit_code) } == w::FALSE {
             return Err(io::Error::last_os_error());
         }
 
-        try!(self.data.read(&mut param));
+        let param = try!(unsafe { remote_data.read(param) });
 
         match exit_code {
-            SUCCESS => initializer.and_then(|(_, user_data)| user_data)
-                                  .map(|(remote_ud, local_ud, _)| remote_ud.read(*local_ud))
-                                  .unwrap_or(Ok(())),
+            SUCCESS => Ok(()),
             ERROR_LOAD_FAILED => Err(io::Error::from_raw_os_error(param.last_error as i32)),
             ERROR_INIT_NOT_FOUND => Err(io::Error::from_raw_os_error(param.last_error as i32)),
-            ERROR_INIT_FAILED => Err(io::Error::new(io::ErrorKind::Other, "initialization routine failed")),
+            ERROR_INIT_FAILED => {
+                let error_message = param.user_data;
+                let error_length = param.user_len;
+                if error_message.is_null() || error_length == 0 {
+                    Err(io::Error::new(io::ErrorKind::Other, "initialization routine panicked"))
+                } else {
+                    let remote_message = unsafe { RemoteMemory::from_raw(self.process, error_message as *mut _) };
+                    let error_string = try!(unsafe { remote_message.read_string(error_message, error_length) });
+
+                    Err(io::Error::new(io::ErrorKind::Other, format!("initialization routine panicked: {}", error_string)))
+                }
+            },
             code => panic!("an unexpected exit code was returned: {}", code),
         }
     }

@@ -1,6 +1,5 @@
-use std::{io, env};
+use std::env;
 use std::process::Command;
-use std::io::prelude::*;
 
 fn main() {
     let target = env::var("TARGET").unwrap();
@@ -23,7 +22,7 @@ fn main() {
                          .arg(input)
                          .status()
                          .unwrap();
-                         
+
     if !status.success() {
         panic!("'fasm' exited with code: {}.", status.code().unwrap())
     }

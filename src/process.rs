@@ -294,19 +294,19 @@ struct STARTUPINFOEXW {
 /// where `program` gives a path to the program to be executed. Additional
 /// builder methods allow the configuration to be changed (for example,
 /// by adding arguments) prior to spawning.
-pub struct Command<'a> {
+pub struct Command {
     program: OsString,
     args: Vec<OsString>,
     env: Option<HashMap<OsString, OsString>>,
     cwd: Option<OsString>,
-    modules: Vec<Module<'a>>,
+    modules: Vec<Module>,
 
     stdin: Option<StdioImp>,
     stdout: Option<StdioImp>,
     stderr: Option<StdioImp>
 }
 
-impl<'a> Command<'a> {
+impl Command {
     /// Constructs a new `Command` for launching the program at
     /// path `program`, with the following default configuration:
     ///
@@ -317,7 +317,7 @@ impl<'a> Command<'a> {
     ///
     /// Builder methods are provided to change these defaults and
     /// otherwise configure the process.
-    pub fn new<S: AsRef<OsStr>>(program: S) -> Command<'a> {
+    pub fn new<S: AsRef<OsStr>>(program: S) -> Command {
         Command {
             program: program.as_ref().to_owned(),
             args: Vec::new(),
@@ -331,13 +331,13 @@ impl<'a> Command<'a> {
     }
 
     /// Add an argument to pass to the program.
-    pub fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Command<'a> {
+    pub fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Command {
         self.args.push(arg.as_ref().to_owned());
         self
     }
 
     /// Add multiple arguments to pass to the program.
-    pub fn args<S: AsRef<OsStr>>(&mut self, args: &[S]) -> &mut Command<'a> {
+    pub fn args<S: AsRef<OsStr>>(&mut self, args: &[S]) -> &mut Command {
         self.args.extend(args.iter().map(|arg| arg.as_ref().to_owned()));
         self
     }
@@ -351,7 +351,7 @@ impl<'a> Command<'a> {
     }
 
     /// Inserts or updates an environment variable mapping.
-    pub fn env<K, V>(&mut self, key: K, val: V) -> &mut Command<'a>
+    pub fn env<K, V>(&mut self, key: K, val: V) -> &mut Command
     where K: AsRef<OsStr>, V: AsRef<OsStr> {
         self.init_env();
         self.env.as_mut().unwrap().insert(make_key(key.as_ref()), val.as_ref().to_owned());
@@ -359,44 +359,44 @@ impl<'a> Command<'a> {
     }
 
     /// Removes an environment variable mapping.
-    pub fn env_remove<K: AsRef<OsStr>>(&mut self, key: K) -> &mut Command<'a> {
+    pub fn env_remove<K: AsRef<OsStr>>(&mut self, key: K) -> &mut Command {
         self.init_env();
         self.env.as_mut().unwrap().remove(&make_key(key.as_ref()));
         self
     }
 
     /// Clears the entire environment map for the child process.
-    pub fn env_clear(&mut self) -> &mut Command<'a> {
+    pub fn env_clear(&mut self) -> &mut Command {
         self.env = Some(HashMap::new());
         self
     }
 
     /// Sets the working directory for the child process.
-    pub fn current_dir<P: AsRef<Path>>(&mut self, dir: P) -> &mut Command<'a> {
+    pub fn current_dir<P: AsRef<Path>>(&mut self, dir: P) -> &mut Command {
         self.cwd = Some(dir.as_ref().into());
         self
     }
 
     /// Injects a module (DLL) before the child process's main thread starts.
-    pub fn inject(&mut self, module: Module<'a>) -> &mut Command<'a> {
-        self.modules.push(module);
+    pub fn inject<M: Into<Module>>(&mut self, module: M) -> &mut Command {
+        self.modules.push(module.into());
         self
     }
 
     /// Configuration for the child process's stdin handle (file descriptor 0).
-    pub fn stdin(&mut self, cfg: Stdio) -> &mut Command<'a> {
+    pub fn stdin(&mut self, cfg: Stdio) -> &mut Command {
         self.stdin = Some(cfg.0);
         self
     }
 
     /// Configuration for the child process's stdout handle (file descriptor 1).
-    pub fn stdout(&mut self, cfg: Stdio) -> &mut Command<'a> {
+    pub fn stdout(&mut self, cfg: Stdio) -> &mut Command {
         self.stdout = Some(cfg.0);
         self
     }
 
     /// Configuration for the child process's stderr handle (file descriptor 2).
-    pub fn stderr(&mut self, cfg: Stdio) -> &mut Command<'a> {
+    pub fn stderr(&mut self, cfg: Stdio) -> &mut Command {
         self.stderr = Some(cfg.0);
         self
     }
@@ -512,7 +512,7 @@ impl<'a> Command<'a> {
     }
 }
 
-impl<'a> fmt::Debug for Command<'a> {
+impl fmt::Debug for Command {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         try!(write!(f, "{:?}", self.program));
         for arg in &self.args {
