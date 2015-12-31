@@ -29,7 +29,7 @@ start:
     call  .get_eip
 .get_eip:
     pop   eax
-    lea   edi, [eax - (.get_eip - $$)]
+    lea   edi, [eax - (.get_eip - start)]
     mov   ebx, [esp + 16]
     push  [module_path]
     call  [LoadLibraryW]
