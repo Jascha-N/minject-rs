@@ -365,22 +365,22 @@ fn get_stub() -> &'static [u8] {
         #[cfg(target_arch = "x86_64")]
         static STUB_CODE: &'static [u8] = include_bytes!("stub64.bin");
 
-        #[cfg(target_arch = "x86")]
         fn write_function(vec: &mut Vec<u8>, module: w::HMODULE, name: &[u8]) {
-            let function = unsafe { k32::GetProcAddress(module, name.as_ptr() as *const _) };
-            if function.is_null() {
-                panic!("{}", io::Error::last_os_error());
+            #[cfg(target_arch = "x86")]
+            fn write(vec: &mut Vec<u8>, function: w::FARPROC) {
+                vec.write_u32::<NativeEndian>(function as u32).unwrap();
             }
-            vec.write_u32::<NativeEndian>(function as u32).unwrap();
-        }
 
-        #[cfg(target_arch = "x86_64")]
-        fn write_function(vec: &mut Vec<u8>, module: w::HMODULE, name: &[u8]) {
+            #[cfg(target_arch = "x86_64")]
+            fn write(vec: &mut Vec<u8>, function: w::FARPROC) {
+                vec.write_u64::<NativeEndian>(function as u64).unwrap();
+            }
+
             let function = unsafe { k32::GetProcAddress(module, name.as_ptr() as *const _) };
             if function.is_null() {
                 panic!("{}", io::Error::last_os_error());
             }
-            vec.write_u64::<NativeEndian>(function as u64).unwrap();
+            write(vec, function);
         }
 
         let kernel32 = unsafe { k32::GetModuleHandleW(KERNEL32_NAME.as_ptr()) };
