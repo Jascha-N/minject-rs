@@ -124,11 +124,12 @@ impl<'a> Drop for RemoteMemory<'a> {
 }
 
 
-
+/// A module builder for a module without an initialization function.
 pub struct ModuleBuilder {
     path: Vec<u16>
 }
 
+/// A module builder for a module with an initialization function.
 pub struct ModuleBuilderWithInit {
     path: Vec<u16>,
     init: Vec<u8>,
@@ -144,6 +145,10 @@ impl ModuleBuilder {
         }
     }
 
+    /// Call the given initializer function after loading the module.
+    ///
+    /// Arguments can be added by calling `arg()` on the result. An initializer function
+    /// can be created in the module using the `initializer!` macro.
     pub fn init<N: Into<Vec<u8>>>(self, name: N) -> ModuleBuilderWithInit {
         let mut init = name.into();
         init.push(0);
@@ -155,6 +160,7 @@ impl ModuleBuilder {
         }
     }
 
+    /// Constructs a module and consumes this builder.
     pub fn unwrap(self) -> Module {
         Module {
             path: self.path,
@@ -164,6 +170,9 @@ impl ModuleBuilder {
 }
 
 impl ModuleBuilderWithInit {
+    /// Adds an argument to the initializer invocation.
+    ///
+    /// The argument needs to be serializable with `serde`.
     pub fn arg<T: Serialize>(self, arg: T) -> ModuleBuilderWithInit {
         ModuleBuilderWithInit {
             args: self.args.push(arg),
@@ -171,6 +180,7 @@ impl ModuleBuilderWithInit {
         }
     }
 
+    /// Constructs a module and consumes this builder.
     pub fn unwrap(self) -> Module {
         Module {
             path: self.path,
@@ -179,12 +189,17 @@ impl ModuleBuilderWithInit {
     }
 }
 
+/// A description of a module (DLL) to be injected into a process.
+///
+/// It contains a path to a module, the name of an optional initializer
+/// function and optional arguments for said function.
 pub struct Module {
     path: Vec<u16>,
     init: Option<(Vec<u8>, Vec<u8>)>
 }
 
 impl Module {
+    /// Creates a new module definition builder given the path to a module.
     pub fn new<P: AsRef<Path>>(path: P) -> ModuleBuilder {
         ModuleBuilder::new(path.as_ref())
     }

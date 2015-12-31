@@ -1,3 +1,8 @@
+//! # The minject-rs library
+//! This library provides a simple API for injecting code (in the form of a DLL)
+//! into another process on the Windows platform.
+#![warn(missing_docs)]
+
 extern crate winapi as w;
 extern crate kernel32 as k32;
 extern crate byteorder;

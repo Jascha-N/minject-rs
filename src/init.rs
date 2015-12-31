@@ -39,7 +39,14 @@ pub fn __deserialize<T: Deserialize>(bytes: &[u8]) -> serde_json::Result<T> {
     serde_json::from_slice(bytes)
 }
 
-
+/// Creates a suitable initialization wrapper function around the given function.
+///
+/// The resulting public function is usable as an initialization function to
+/// be called during code injection. Its signature is unspecified and is
+/// subject to change.
+///
+/// Arguments of the wrapped function must implement `serde::Deserialize`.
+/// The function can not return a value.
 #[macro_export]
 macro_rules! initializer {
     (parse: $(#[$fn_attr:meta])* fn $fn_name:ident ($($arg_name:ident : $arg_type:ty),*) { $($body:tt)* }) => {

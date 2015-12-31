@@ -1,3 +1,9 @@
+//! This module provides a drop-in replacement for most of the functionality
+//! inside the `std::process` module.
+//!
+//! In addition, the `Command` type in this module provides the possibility
+//! to inject code into the child process after it is spawned.
+
 use std::{env, fs, ops, io, mem, ptr, thread};
 use std::fmt::{self, Formatter};
 use std::ascii::AsciiExt;
@@ -294,6 +300,14 @@ struct STARTUPINFOEXW {
 /// where `program` gives a path to the program to be executed. Additional
 /// builder methods allow the configuration to be changed (for example,
 /// by adding arguments) prior to spawning.
+///
+/// In addition to providing the fuctionality from `std::process::Command`,
+/// this type allows injection of modules (DLLs) through the `inject()`
+/// function. These modules are injected before the main thread of the
+/// spawned process starts.
+///
+/// Another difference from `std::process::Command` is that this version
+/// uses a lock-free method for spawning the child process.
 pub struct Command {
     program: OsString,
     args: Vec<OsString>,
