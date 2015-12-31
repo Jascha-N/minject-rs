@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Command` struct in crate `minject`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Command">
+
+    <title>minject::process::Command - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>minject</a>::<wbr><a href='index.html'>process</a></p><script>window.sidebarCurrent = {name: 'Command', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>minject</a>::<wbr><a href='index.html'>process</a>::<wbr><a class='struct' href=''>Command</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-417' class='srclink' href='../../src/minject/process.rs.html#311-321' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Command {
+    // some fields omitted
+}</pre><div class='docblock'><p>The <code>Command</code> type acts as a process builder, providing fine-grained control
+over how a new process should be spawned.</p>
+
+<p>A default configuration can be generated using <code>Command::new(program)</code>,
+where <code>program</code> gives a path to the program to be executed. Additional
+builder methods allow the configuration to be changed (for example,
+by adding arguments) prior to spawning.</p>
+
+<p>In addition to providing the fuctionality from <code>std::process::Command</code>,
+this type allows injection of modules (DLLs) through the <code>inject()</code>
+function. These modules are injected before the main thread of the
+spawned process starts.</p>
+
+<p>Another difference from <code>std::process::Command</code> is that this version
+uses a lock-free method for spawning the child process.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h3><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>&lt;S: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;&gt;(program: S) -&gt; <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Constructs a new <code>Command</code> for launching the program at
+path <code>program</code>, with the following default configuration:</p>
+
+<ul>
+<li>No arguments to the program</li>
+<li>Inherit the current process&#39;s environment</li>
+<li>Inherit the current process&#39;s working directory</li>
+<li>Inherit stdin/stdout/stderr for <code>spawn</code> or <code>status</code>, but create pipes for <code>output</code></li>
+</ul>
+
+<p>Builder methods are provided to change these defaults and
+otherwise configure the process.</p>
+</div><h4 id='method.arg' class='method'><code>fn <a href='#method.arg' class='fnname'>arg</a>&lt;S: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;&gt;(&amp;mut self, arg: S) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Add an argument to pass to the program.</p>
+</div><h4 id='method.args' class='method'><code>fn <a href='#method.args' class='fnname'>args</a>&lt;S: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;&gt;(&amp;mut self, args: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a>S<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Add multiple arguments to pass to the program.</p>
+</div><h4 id='method.env' class='method'><code>fn <a href='#method.env' class='fnname'>env</a>&lt;K, V&gt;(&amp;mut self, key: K, val: V) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a> <span class='where'>where K: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;, V: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;</span></code></h4>
+<div class='docblock'><p>Inserts or updates an environment variable mapping.</p>
+</div><h4 id='method.env_remove' class='method'><code>fn <a href='#method.env_remove' class='fnname'>env_remove</a>&lt;K: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;&gt;(&amp;mut self, key: K) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Removes an environment variable mapping.</p>
+</div><h4 id='method.env_clear' class='method'><code>fn <a href='#method.env_clear' class='fnname'>env_clear</a>(&amp;mut self) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Clears the entire environment map for the child process.</p>
+</div><h4 id='method.current_dir' class='method'><code>fn <a href='#method.current_dir' class='fnname'>current_dir</a>&lt;P: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a>&gt;&gt;(&amp;mut self, dir: P) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Sets the working directory for the child process.</p>
+</div><h4 id='method.inject' class='method'><code>fn <a href='#method.inject' class='fnname'>inject</a>&lt;M: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.Into.html' title='core::convert::Into'>Into</a>&lt;<a class='struct' href='../../minject/struct.Module.html' title='minject::Module'>Module</a>&gt;&gt;(&amp;mut self, module: M) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Injects a module (DLL) before the child process&#39;s main thread starts.</p>
+</div><h4 id='method.stdin' class='method'><code>fn <a href='#method.stdin' class='fnname'>stdin</a>(&amp;mut self, cfg: <a class='struct' href='../../minject/process/struct.Stdio.html' title='minject::process::Stdio'>Stdio</a>) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Configuration for the child process&#39;s stdin handle (file descriptor 0).</p>
+</div><h4 id='method.stdout' class='method'><code>fn <a href='#method.stdout' class='fnname'>stdout</a>(&amp;mut self, cfg: <a class='struct' href='../../minject/process/struct.Stdio.html' title='minject::process::Stdio'>Stdio</a>) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Configuration for the child process&#39;s stdout handle (file descriptor 1).</p>
+</div><h4 id='method.stderr' class='method'><code>fn <a href='#method.stderr' class='fnname'>stderr</a>(&amp;mut self, cfg: <a class='struct' href='../../minject/process/struct.Stdio.html' title='minject::process::Stdio'>Stdio</a>) -&gt; &amp;mut <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h4>
+<div class='docblock'><p>Configuration for the child process&#39;s stderr handle (file descriptor 2).</p>
+</div><h4 id='method.spawn' class='method'><code>fn <a href='#method.spawn' class='fnname'>spawn</a>(&amp;mut self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../minject/process/struct.Child.html' title='minject::process::Child'>Child</a>&gt;</code></h4>
+<div class='docblock'><p>Executes the command as a child process, returning a handle to it.</p>
+
+<p>By default, stdin, stdout and stderr are inherited from the parent.</p>
+</div><h4 id='method.output' class='method'><code>fn <a href='#method.output' class='fnname'>output</a>(&amp;mut self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../minject/process/struct.Output.html' title='minject::process::Output'>Output</a>&gt;</code></h4>
+<div class='docblock'><p>Executes the command as a child process, waiting for it to finish and
+collecting all of its output.</p>
+
+<p>By default, stdin, stdout and stderr are captured (and used to
+provide the resulting output).</p>
+</div><h4 id='method.status' class='method'><code>fn <a href='#method.status' class='fnname'>status</a>(&amp;mut self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../minject/process/struct.ExitStatus.html' title='minject::process::ExitStatus'>ExitStatus</a>&gt;</code></h4>
+<div class='docblock'><p>Executes a command as a child process, waiting for it to finish and
+collecting its exit status.</p>
+
+<p>By default, stdin, stdout and stderr are inherited from the parent.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../minject/process/struct.Command.html' title='minject::process::Command'>Command</a></code></h3><div class='impl-items'><h4 id='method.fmt' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#method.fmt' class='fnname'>fmt</a>(&amp;self, f: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "minject";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>
