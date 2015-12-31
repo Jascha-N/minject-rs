@@ -1,0 +1,34 @@
+branches:
+  only:
+    - master
+
+environment:
+  matrix:
+#  - TARGET: i686-pc-windows-msvc
+  - TARGET: x86_64-pc-windows-msvc
+  - TARGET: i686-pc-windows-gnu
+  - TARGET: x86_64-pc-windows-gnu
+  GH_TOKEN:
+    secure: UHajdmalPacLa26ORMDaOwtjJP/U4KOWjlqlHOC/ZFd2wlGscrSq9f7hnpyWWHK0
+
+install:
+  - set PATH=C:\Python27;C:\Python27\Scripts;%PATH%;%APPDATA%\Python\Scripts
+  - pip install "travis-cargo<0.2" --user
+  - appveyor DownloadFile "https://static.rust-lang.org/dist/rust-nightly-%TARGET%.exe"
+  - rust-nightly-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Rust"
+  - set PATH=%PATH%;C:\Rust\bin
+  - appveyor DownloadFile "http://flatassembler.net/fasmw17139.zip"
+  - 7z x fasmw17139.zip -oC:\FASM -y
+  - set PATH=%PATH%;C:\FASM
+  - rustc -V -v
+  - cargo -V -v
+
+build_script:
+  - cargo doc --no-deps
+  - cargo package
+
+test_script:
+  - cargo test
+
+deploy_script:
+  - travis-cargo doc-upload
