@@ -46,7 +46,7 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-0' class='srclink' href='../src/minject/lib.rs.html#1-19' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-0' class='srclink' href='../src/minject/src/lib.rs.html#1-19' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'>
 <h1 id='the-minject-rs-library' class='section-header'><a href='#the-minject-rs-library'>The minject-rs library</a></h1>
 <p>This library provides a simple API for injecting code (in the form of a DLL)
@@ -59,7 +59,6 @@ into another process on the Windows platform.</p>
                         <td class='docblock short'>
                              <p>This module provides a drop-in replacement for most of the functionality
 inside the <code>std::process</code> module.</p>
-
                         </td>
                     </tr>
                 </table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
@@ -69,7 +68,6 @@ inside the <code>std::process</code> module.</p>
                                title='minject::initializer!'>initializer!</a></td>
                         <td class='docblock short'>
                              <p>Creates a suitable initialization wrapper function around the given function.</p>
-
                         </td>
                     </tr>
                 </table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
@@ -79,7 +77,6 @@ inside the <code>std::process</code> module.</p>
                                title='minject::Module'>Module</a></td>
                         <td class='docblock short'>
                              <p>A description of a module (DLL) to be injected into a process.</p>
-
                         </td>
                     </tr>
                 
@@ -88,7 +85,6 @@ inside the <code>std::process</code> module.</p>
                                title='minject::ModuleBuilder'>ModuleBuilder</a></td>
                         <td class='docblock short'>
                              <p>A module builder for a module without an initialization function.</p>
-
                         </td>
                     </tr>
                 
@@ -97,7 +93,6 @@ inside the <code>std::process</code> module.</p>
                                title='minject::ModuleBuilderWithInit'>ModuleBuilderWithInit</a></td>
                         <td class='docblock short'>
                              <p>A module builder for a module with an initialization function.</p>
-
                         </td>
                     </tr>
                 </table></section>
@@ -143,7 +138,7 @@ inside the <code>std::process</code> module.</p>
 
                 <p>
                     Search functions by type signature (e.g.
-                    <code>vec -> usize</code>)
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
                 </p>
             </div>
         </div>
