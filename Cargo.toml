@@ -12,9 +12,8 @@ build = "build.rs"
 winapi = "0.2"
 kernel32-sys = "0.2"
 byteorder = "0.4"
-serde = "0.6"
-serde_json = "0.6"
+serde = "0.7"
+serde_json = "0.7"
 
 [dependencies.miow]
-version = "0.1"
-features = ["unstable"]
+git = "https://github.com/alexcrichton/miow"
