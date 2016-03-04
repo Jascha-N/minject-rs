@@ -26,4 +26,6 @@ fn main() {
     if !status.success() {
         panic!("'fasm' exited with code: {}.", status.code().unwrap())
     }
+
+    println!("cargo:rerun-if-changed={}", input);
 }
