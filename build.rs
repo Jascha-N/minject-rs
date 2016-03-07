@@ -13,8 +13,8 @@ fn main() {
     }
 
     let input = match arch {
-        "i686"   => "src/stub32.asm",
-        "x86_64" => "src/stub64.asm",
+        "i686"   => "src/thunk32.asm",
+        "x86_64" => "src/thunk64.asm",
         _        => panic!("Architecture '{}' not supported.", arch)
     };
 

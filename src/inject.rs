@@ -278,9 +278,9 @@ impl<'a> Injector<'a> {
     pub fn new(process: &Handle) -> io::Result<Injector> {
         try!(check_same_architecture(process));
 
-        let stub = get_stub();
-        let mut code = try!(RemoteMemory::new(process, mem::size_of_val(stub), true));
-        let thread_proc = try!(code.write_slice(stub));
+        let thunk = get_thunk();
+        let mut code = try!(RemoteMemory::new(process, mem::size_of_val(thunk), true));
+        let thread_proc = try!(code.write_slice(thunk));
 
         Ok(Injector {
              process: process,
@@ -367,18 +367,18 @@ fn check_same_architecture(process: &Handle) -> io::Result<()> {
     }
 }
 
-fn get_stub() -> &'static [u8] {
+fn get_thunk() -> &'static [u8] {
     static INIT: Once = ONCE_INIT;
-    static mut STUB: *const [u8] = &[];
+    static mut THUNK: *const [u8] = &[];
 
     INIT.call_once(|| {
         const KERNEL32_NAME: &'static [w::WCHAR] = &[0x6B, 0x65, 0x72, 0x6E, 0x65, 0x6C, 0x33, 0x32, 0x2E, 0x64, 0x6C, 0x6C, 0x0];
 
         #[cfg(target_arch = "x86")]
-        static STUB_CODE: &'static [u8] = include_bytes!("stub32.bin");
+        static THUNK_CODE: &'static [u8] = include_bytes!("thunk32.bin");
 
         #[cfg(target_arch = "x86_64")]
-        static STUB_CODE: &'static [u8] = include_bytes!("stub64.bin");
+        static THUNK_CODE: &'static [u8] = include_bytes!("thunk64.bin");
 
         fn write_function(vec: &mut Vec<u8>, module: w::HMODULE, name: &[u8]) {
             #[cfg(target_arch = "x86")]
@@ -403,8 +403,8 @@ fn get_stub() -> &'static [u8] {
             panic!("{}", io::Error::last_os_error());
         }
 
-        let mut vec = Vec::with_capacity(STUB_CODE.len() * 2);
-        vec.write_all(STUB_CODE).unwrap();
+        let mut vec = Vec::with_capacity(THUNK_CODE.len() * 2);
+        vec.write_all(THUNK_CODE).unwrap();
         while vec.len() % mem::size_of::<usize>() > 0 {
             vec.push(0)
         }
@@ -414,8 +414,8 @@ fn get_stub() -> &'static [u8] {
         write_function(&mut vec, kernel32, b"GetProcAddress\0");
         write_function(&mut vec, kernel32, b"GetLastError\0");
 
-        unsafe { STUB = Box::into_raw(vec.into_boxed_slice()); }
+        unsafe { THUNK = Box::into_raw(vec.into_boxed_slice()); }
     });
 
-    unsafe { &*STUB }
+    unsafe { &*THUNK }
 }
