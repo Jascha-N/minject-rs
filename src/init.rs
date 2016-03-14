@@ -2,8 +2,11 @@
 
 use std::{mem, ptr};
 use std::any::Any;
+use std::io::Read;
 
-use {k32, w, serde_json};
+use {k32, w};
+use bincode::{self, SizeLimit};
+use bincode::serde::DeserializeResult;
 use serde::Deserialize;
 
 #[doc(hidden)]
@@ -35,8 +38,8 @@ pub fn __handle_init_panic(payload: Box<Any + Send>) -> (*const u8, usize) {
 }
 
 #[doc(hidden)]
-pub fn __deserialize<T: Deserialize>(bytes: &[u8]) -> serde_json::Result<T> {
-    serde_json::from_slice(bytes)
+pub fn __deserialize<R: Read, T: Deserialize>(reader: &mut R) -> DeserializeResult<T> {
+    bincode::serde::deserialize_from(reader, SizeLimit::Infinite)
 }
 
 /// Creates a suitable initialization wrapper function around the given function.
@@ -62,24 +65,32 @@ macro_rules! initializer {
     (make_init: ($($temp_name:ident)*) ($($fn_attr:meta)*) ($fn_name:ident) ($($arg_name:ident)*) ($($arg_type:ty)*) ($body:block)) => {
         $(#[$fn_attr])*
         #[no_mangle]
-        pub unsafe extern fn $fn_name(__user_data: *mut *const u8, __user_len: *mut usize) -> bool {
+        pub unsafe extern fn $fn_name(__user_data: *mut *const u8, __user_len: *mut usize) -> usize {
             fn __inner($($arg_name : $arg_type),*) $body
 
             ::std::panic::recover(|| {
                 assert!(!__user_data.is_null() && !__user_len.is_null() && !(*__user_data).is_null());
 
                 let slice = ::std::slice::from_raw_parts(*__user_data, *__user_len);
-                let ($($temp_name,)*) = $crate::init::__deserialize(slice).expect("error deserializing arguments");
-                __inner($($temp_name),*);
+                let mut reader = ::std::io::Cursor::new(slice);
+                $(
+                    let $temp_name = $crate::init::__deserialize(&mut reader).expect(&format!("error deserializing argument '{}'", stringify!($arg_name)));
+                )*
 
-                true
+                match ::std::io::Read::read(&mut reader, &mut [0u8]) {
+                    Ok(0) => __inner($($temp_name),*),
+                    Ok(_) => panic!("error deserializing: too many arguments supplied"),
+                    _ => unreachable!()
+                }
+
+                1
             }).unwrap_or_else(|payload| {
                 let (message, length) = $crate::init::__handle_init_panic(payload);
 
                 *__user_data = message;
                 *__user_len = length;
 
-                false
+                0
             })
         }
     };

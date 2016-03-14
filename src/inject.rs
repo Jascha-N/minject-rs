@@ -4,10 +4,11 @@ use std::path::Path;
 use std::os::windows::prelude::*;
 use std::io::prelude::*;
 
-use {w, k32, serde_json};
+use {w, k32};
+use bincode::SizeLimit;
+use bincode::serde::{self, SerializeResult};
 use byteorder::{WriteBytesExt, NativeEndian};
 use serde::Serialize;
-use serde_json::builder::ArrayBuilder;
 
 use handle::Handle;
 
@@ -133,7 +134,7 @@ pub struct ModuleBuilder {
 pub struct ModuleBuilderWithInit {
     path: Vec<u16>,
     init: Vec<u8>,
-    args: ArrayBuilder
+    args: Vec<u8>
 }
 
 impl ModuleBuilder {
@@ -156,7 +157,7 @@ impl ModuleBuilder {
         ModuleBuilderWithInit {
             path: self.path,
             init: init,
-            args: ArrayBuilder::new()
+            args: Vec::new()
         }
     }
 
@@ -173,18 +174,20 @@ impl ModuleBuilderWithInit {
     /// Adds an argument to the initializer invocation.
     ///
     /// The argument needs to be serializable with `serde`.
-    pub fn arg<T: Serialize>(self, arg: T) -> ModuleBuilderWithInit {
-        ModuleBuilderWithInit {
-            args: self.args.push(arg),
+    pub fn arg<T: ?Sized + Serialize>(mut self, arg: &T) -> SerializeResult<ModuleBuilderWithInit> {
+        let mut args = mem::replace(&mut self.args, Vec::new());
+        try!(serde::serialize_into(&mut args, &arg, SizeLimit::Infinite));
+        Ok(ModuleBuilderWithInit {
+            args: args,
             ..self
-        }
+        })
     }
 
     /// Constructs a module and consumes this builder.
     pub fn unwrap(self) -> Module {
         Module {
             path: self.path,
-            init: Some((self.init, serde_json::to_vec(&self.args.unwrap()).unwrap()))
+            init: Some((self.init, self.args))
         }
     }
 }

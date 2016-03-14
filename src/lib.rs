@@ -8,7 +8,7 @@ extern crate kernel32 as k32;
 extern crate byteorder;
 extern crate miow;
 extern crate serde;
-extern crate serde_json;
+extern crate bincode;
 
 mod handle;
 mod inject;
