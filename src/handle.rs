@@ -7,9 +7,13 @@ use {w, k32};
 pub struct Handle(RawHandle);
 
 impl Handle {
-    pub fn new(handle: RawHandle) -> Handle { Handle(handle) }
+    pub fn new(handle: RawHandle) -> Handle {
+        Handle(handle)
+    }
 
-    pub fn as_inner(&self) -> RawHandle { self.0 }
+    pub fn as_inner(&self) -> RawHandle {
+        self.0
+    }
 
     pub fn wait(&self) -> io::Result<()> {
         if unsafe { k32::WaitForSingleObject(self.0, w::INFINITE) } == w::WAIT_FAILED {
@@ -28,7 +32,9 @@ impl Drop for Handle {
 }
 
 impl AsRawHandle for Handle {
-    fn as_raw_handle(&self) -> RawHandle { self.as_inner() }
+    fn as_raw_handle(&self) -> RawHandle {
+        self.as_inner()
+    }
 }
 
 impl FromRawHandle for Handle {

@@ -54,7 +54,7 @@ start:
     lea   rdx, [user_len]
     lea   rcx, [user_data]
     call  rax
-    test  al, 1
+    test  rax, rax
     jnz   .success
     mov   rcx, rsi
     call  [FreeLibrary]

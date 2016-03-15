@@ -1,4 +1,6 @@
-use std::{io, ptr, mem};
+use std::{ptr, mem, error};
+use std::fmt::{self, Display, Formatter};
+use std::io::{self, ErrorKind};
 use std::sync::{Once, ONCE_INIT};
 use std::path::Path;
 use std::os::windows::prelude::*;
@@ -6,11 +8,12 @@ use std::io::prelude::*;
 
 use {w, k32};
 use bincode::SizeLimit;
-use bincode::serde::{self, SerializeResult};
+use bincode::serde::{self, DeserializeError, SerializeResult};
 use byteorder::{WriteBytesExt, NativeEndian};
 use serde::Serialize;
 
 use handle::Handle;
+use init::InitError;
 
 struct RemoteMemory<'a> {
     process: &'a Handle,
@@ -21,7 +24,7 @@ struct RemoteMemory<'a> {
 impl<'a> RemoteMemory<'a> {
     fn new(process: &Handle, size: usize, executable: bool) -> io::Result<RemoteMemory> {
         if size == 0 {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "size is zero"));
+            return Err(io::Error::new(ErrorKind::InvalidInput, "size is zero"));
         }
 
         let protect = if executable {
@@ -97,9 +100,9 @@ impl<'a> RemoteMemory<'a> {
         Ok(value)
     }
 
-    unsafe fn read_string(&self, remote_ptr: *const u8, length: usize) -> io::Result<String> {
+    unsafe fn read_vec<T: Copy>(&self, remote_ptr: *const T, length: usize) -> io::Result<Vec<T>> {
         if length == 0 {
-            return Ok(String::new())
+            return Ok(Vec::new());
         }
 
         let mut buffer = Vec::with_capacity(length);
@@ -114,7 +117,7 @@ impl<'a> RemoteMemory<'a> {
             return Err(io::Error::last_os_error());
         }
 
-        Ok(String::from_utf8_unchecked(buffer))
+        Ok(buffer)
     }
 }
 
@@ -271,6 +274,67 @@ const ERROR_LOAD_FAILED: w::DWORD = 1;
 const ERROR_INIT_NOT_FOUND: w::DWORD = 2;
 const ERROR_INIT_FAILED: w::DWORD = 3;
 
+#[derive(Debug)]
+pub enum Error {
+    Architecture,
+    LoadFailed(io::Error),
+    InitNotFound(io::Error),
+    InitError(Option<InitError>),
+    Deserialize(DeserializeError),
+    Io(io::Error)
+}
+
+impl Display for Error {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        match *self {
+            Error::Architecture => write!(formatter, "Target application's architecture does not match"),
+            Error::LoadFailed(ref error) => write!(formatter, "Failed to load module: {}", error),
+            Error::InitNotFound(ref error) => write!(formatter, "Failed to find initializer function: {}", error),
+            Error::InitError(None) => write!(formatter, "Unspecified error during initialization"),
+            Error::InitError(Some(ref error)) => write!(formatter, "Error during initialization: {}", error),
+            Error::Deserialize(ref error) => write!(formatter, "Error deserializing initialization error: {}", error),
+            Error::Io(ref error) => write!(formatter, "An I/O error occurred: {}", error)
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        "injection error"
+    }
+
+    fn cause(&self) -> Option<&error::Error> {
+        match *self {
+            Error::LoadFailed(ref error) | Error::InitNotFound(ref error) | Error::Io(ref error) => Some(error),
+            Error::InitError(Some(ref error)) => Some(error),
+            _ => None
+        }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Error {
+        Error::Io(error)
+    }
+}
+
+impl From<DeserializeError> for Error {
+    fn from(error: DeserializeError) -> Error {
+        Error::Deserialize(error)
+    }
+}
+
+impl From<Error> for io::Error {
+    fn from(error: Error) -> io::Error {
+        match error {
+            Error::Io(error) => error,
+            error => io::Error::new(ErrorKind::Other, error)
+        }
+    }
+}
+
+pub type Result<T> = ::std::result::Result<T, Error>;
+
 pub struct Injector<'a> {
     process: &'a Handle,
     _code: RemoteMemory<'a>,
@@ -292,7 +356,7 @@ impl<'a> Injector<'a> {
         })
     }
 
-    pub fn inject(&self, module: &Module) -> io::Result<()> {
+    pub fn inject(&self, module: &Module) -> Result<()> {
         let (remote_data, param) = try!(module.copy_to_process(self.process));
 
         let thread = unsafe {
@@ -301,32 +365,33 @@ impl<'a> Injector<'a> {
                                     param as w::LPVOID, 0, ptr::null_mut())
         };
         if thread.is_null() {
-            return Err(io::Error::last_os_error());
+            return Err(Error::Io(io::Error::last_os_error()));
         }
         let thread = Handle::new(thread);
         try!(thread.wait());
 
         let mut exit_code = unsafe { mem::uninitialized() };
         if unsafe { k32::GetExitCodeThread(thread.as_inner(), &mut exit_code) } == w::FALSE {
-            return Err(io::Error::last_os_error());
+            return Err(Error::Io(io::Error::last_os_error()));
         }
 
         let param = try!(unsafe { remote_data.read(param) });
 
         match exit_code {
             SUCCESS => Ok(()),
-            ERROR_LOAD_FAILED => Err(io::Error::from_raw_os_error(param.last_error as i32)),
-            ERROR_INIT_NOT_FOUND => Err(io::Error::from_raw_os_error(param.last_error as i32)),
+            ERROR_LOAD_FAILED => Err(Error::LoadFailed(io::Error::from_raw_os_error(param.last_error as i32))),
+            ERROR_INIT_NOT_FOUND => Err(Error::InitNotFound(io::Error::from_raw_os_error(param.last_error as i32))),
             ERROR_INIT_FAILED => {
-                let error_message = param.user_data;
+                let error = param.user_data;
                 let error_length = param.user_len;
-                if error_message.is_null() || error_length == 0 {
-                    Err(io::Error::new(io::ErrorKind::Other, "initialization routine panicked"))
+                if error.is_null() || error_length == 0 {
+                    Err(Error::InitError(None))
                 } else {
-                    let remote_message = unsafe { RemoteMemory::from_raw(self.process, error_message as *mut _) };
-                    let error_string = try!(unsafe { remote_message.read_string(error_message, error_length) });
+                    let remote_message = unsafe { RemoteMemory::from_raw(self.process, error as *mut _) };
+                    let serialized_error = try!(unsafe { remote_message.read_vec(error, error_length) });
+                    let deserialized_error = try!(serde::deserialize(&serialized_error[..]));
 
-                    Err(io::Error::new(io::ErrorKind::Other, format!("initialization routine panicked: {}", error_string)))
+                    Err(Error::InitError(Some(deserialized_error)))
                 }
             },
             code => panic!("an unexpected exit code was returned: {}", code),
@@ -335,7 +400,7 @@ impl<'a> Injector<'a> {
 }
 
 #[cfg(target_arch = "x86")]
-fn check_same_architecture(process: &Handle) -> io::Result<()> {
+fn check_same_architecture(process: &Handle) -> Result<()> {
     let mut si = unsafe { mem::uninitialized() };
     unsafe { k32::GetNativeSystemInfo(&mut si); }
     if si.wProcessorArchitecture == 0 /* w::PROCESSOR_ARCHITECTURE_INTEL */ {
@@ -344,29 +409,27 @@ fn check_same_architecture(process: &Handle) -> io::Result<()> {
 
     let mut wow64 = unsafe { mem::uninitialized() };
     if unsafe { k32::IsWow64Process(process.as_inner(), &mut wow64) } == w::FALSE {
-        return Err(io::Error::last_os_error());
+        return Err(Error::Io(io::Error::last_os_error()));
     }
 
     if wow64 == w::TRUE {
         Ok(())
     } else {
-        Err(io::Error::new(io::ErrorKind::Other,
-                           "target process is 64-bit while current process is 32-bit"))
+        Err(Error::Architecture)
     }
 }
 
 #[cfg(target_arch = "x86_64")]
-fn check_same_architecture(process: &Handle) -> io::Result<()> {
+fn check_same_architecture(process: &Handle) -> Result<()> {
     let mut wow64 = unsafe { mem::uninitialized() };
     if unsafe { k32::IsWow64Process(process.as_inner(), &mut wow64) } == w::FALSE {
-        return Err(io::Error::last_os_error());
+        return Err(Error::Io(io::Error::last_os_error()));
     }
 
     if wow64 == w::FALSE {
         Ok(())
     } else {
-        Err(io::Error::new(io::ErrorKind::Other,
-                           "target process is 32-bit while current process is 64-bit"))
+        Err(Error::Architecture)
     }
 }
 

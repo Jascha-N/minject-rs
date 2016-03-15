@@ -61,7 +61,7 @@ start:
     push  ecx
     call  eax
     add   esp, 8
-    test  al, 1
+    test  eax, eax
     jnz   .success
     push  esi
     call  [FreeLibrary]

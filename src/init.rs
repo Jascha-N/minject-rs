@@ -1,40 +1,64 @@
 #![doc(hidden)]
 
 use std::{mem, ptr};
-use std::any::Any;
+use std::fmt::{self, Display, Formatter};
+use std::error::Error;
 use std::io::Read;
 
 use {k32, w};
 use bincode::{self, SizeLimit};
 use bincode::serde::DeserializeResult;
-use serde::Deserialize;
+use serde::{Serializer, Deserialize, Deserializer};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum InitError {
+    Panic(String),
+    Argument(String, String),
+    TooManyArguments
+}
+
+impl Display for InitError {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        match *self {
+            InitError::Panic(ref message) => write!(formatter, "A panic occcured during initialization: {}", message),
+            InitError::Argument(ref name, ref error) => write!(formatter, "Failed to deserialize argument '{}': {}", name, error),
+            InitError::TooManyArguments => write!(formatter, "Too many arguments supplied to initializer function")
+        }
+    }
+}
+
+impl Error for InitError {
+    fn description(&self) -> &str {
+        "error during initializer"
+    }
+}
 
 #[doc(hidden)]
-pub fn __handle_init_panic(payload: Box<Any + Send>) -> (*const u8, usize) {
-    let message = match payload.downcast_ref::<&'static str>() {
-        Some(s) => *s,
-        None => match payload.downcast_ref::<String>() {
-            Some(s) => &s[..],
-            None => "Box<Any>",
+pub fn __set_result(result: Result<(), InitError>, out_data: &mut *const u8, out_size: &mut usize) -> usize {
+    *out_data = ptr::null();
+    *out_size = 0;
+
+    match result {
+        Ok(()) => 1,
+        Err(error) => {
+            if let Ok(buffer) = bincode::serde::serialize(&error, SizeLimit::Infinite) {
+                let size = mem::size_of_val(&buffer[..]);
+                let data = unsafe {
+                    k32::VirtualAlloc(ptr::null_mut(),
+                                      size as w::SIZE_T,
+                                      w::MEM_COMMIT | w::MEM_RESERVE,
+                                      w::PAGE_READWRITE)
+                } as *mut u8;
+                if !data.is_null() {
+                    unsafe { ptr::copy_nonoverlapping(buffer.as_ptr(), data, buffer.len()); }
+                    *out_data = data;
+                    *out_size = size;
+                }
+            }
+            0
         }
-    };
-
-    if message.len() == 0 {
-        return (ptr::null(), 0)
     }
 
-    let result = unsafe {
-        k32::VirtualAlloc(ptr::null_mut(),
-                          mem::size_of_val(&message[..]) as w::SIZE_T,
-                          w::MEM_COMMIT | w::MEM_RESERVE,
-                          w::PAGE_READWRITE)
-    } as *mut u8;
-    if result.is_null() {
-        return (ptr::null(), 0)
-    }
-    unsafe { ptr::copy_nonoverlapping(message.as_ptr(), result, message.len()); }
-
-    (result as *const _, message.len())
 }
 
 #[doc(hidden)]
@@ -65,33 +89,44 @@ macro_rules! initializer {
     (make_init: ($($temp_name:ident)*) ($($fn_attr:meta)*) ($fn_name:ident) ($($arg_name:ident)*) ($($arg_type:ty)*) ($body:block)) => {
         $(#[$fn_attr])*
         #[no_mangle]
-        pub unsafe extern fn $fn_name(__user_data: *mut *const u8, __user_len: *mut usize) -> usize {
+        pub unsafe extern fn $fn_name(__data: *mut *const u8, __size: *mut usize) -> usize {
             fn __inner($($arg_name : $arg_type),*) $body
 
-            ::std::panic::recover(|| {
-                assert!(!__user_data.is_null() && !__user_len.is_null() && !(*__user_data).is_null());
+            unsafe fn __deserialize_and_invoke(data: *const u8, size: usize) -> Result<(), $crate::InitError> {
+                assert!(!data.is_null());
 
-                let slice = ::std::slice::from_raw_parts(*__user_data, *__user_len);
+                let slice = ::std::slice::from_raw_parts(data, size);
                 let mut reader = ::std::io::Cursor::new(slice);
                 $(
-                    let $temp_name = $crate::init::__deserialize(&mut reader).expect(&format!("error deserializing argument '{}'", stringify!($arg_name)));
+                    let $temp_name = try!($crate::init::__deserialize(&mut reader).map_err(|e| $crate::InitError::Argument(stringify!($arg_name).to_owned(), format!("{}", e))));
                 )*
 
                 match ::std::io::Read::read(&mut reader, &mut [0u8]) {
-                    Ok(0) => __inner($($temp_name),*),
-                    Ok(_) => panic!("error deserializing: too many arguments supplied"),
+                    Ok(0) => { __inner($($temp_name),*); Ok(()) }
+                    Ok(_) => Err($crate::InitError::TooManyArguments),
                     _ => unreachable!()
                 }
+            }
 
-                1
+            if __data.is_null() || __size.is_null() {
+                return 0;
+            }
+
+            let result = ::std::panic::recover(|| {
+                __deserialize_and_invoke(*__data, *__size)
             }).unwrap_or_else(|payload| {
-                let (message, length) = $crate::init::__handle_init_panic(payload);
+                let message = match payload.downcast::<&'static str>() {
+                    Ok(s) => (*s).to_owned(),
+                    Err(payload) => match payload.downcast::<String>() {
+                        Ok(s) => *s,
+                        Err(_) => "Box<Any>".to_owned()
+                    }
+                };
 
-                *__user_data = message;
-                *__user_len = length;
+                Err($crate::InitError::Panic(message))
+            });
 
-                0
-            })
+            $crate::init::__set_result(result, &mut *__data, &mut *__size)
         }
     };
 
