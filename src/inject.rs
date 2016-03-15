@@ -440,11 +440,7 @@ fn get_thunk() -> &'static [u8] {
     INIT.call_once(|| {
         const KERNEL32_NAME: &'static [w::WCHAR] = &[0x6B, 0x65, 0x72, 0x6E, 0x65, 0x6C, 0x33, 0x32, 0x2E, 0x64, 0x6C, 0x6C, 0x0];
 
-        #[cfg(target_arch = "x86")]
-        static THUNK_CODE: &'static [u8] = include_bytes!("thunk32.bin");
-
-        #[cfg(target_arch = "x86_64")]
-        static THUNK_CODE: &'static [u8] = include_bytes!("thunk64.bin");
+        static THUNK_CODE: &'static [u8] = include_bytes!(concat!(env!("OUT_DIR"), "/thunk.bin"));
 
         fn write_function(vec: &mut Vec<u8>, module: w::HMODULE, name: &[u8]) {
             #[cfg(target_arch = "x86")]

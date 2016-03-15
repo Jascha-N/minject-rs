@@ -1,8 +1,10 @@
 use std::env;
+use std::path::Path;
 use std::process::Command;
 
 fn main() {
     let target = env::var("TARGET").unwrap();
+    let out_dir = env::var("OUT_DIR").unwrap();
 
     let parts = target.splitn(4, '-').collect::<Vec<_>>();
     let arch = parts[0];
@@ -20,6 +22,7 @@ fn main() {
 
     let status = Command::new("fasm")
                          .arg(input)
+                         .arg(Path::new(&out_dir).join("thunk.bin"))
                          .status()
                          .unwrap();
 
