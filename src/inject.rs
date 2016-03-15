@@ -137,12 +137,17 @@ pub struct ModuleBuilder {
 pub struct ModuleBuilderWithInit {
     path: Vec<u16>,
     init: Vec<u8>,
-    args: Vec<u8>
+    args: Vec<InitArg>
+}
+
+enum InitArg {
+    Serialized(Vec<u8>),
+    Handle(Handle)
 }
 
 impl ModuleBuilder {
-    fn new(path: &Path) -> ModuleBuilder {
-        let path = path.as_os_str().encode_wide().chain(Some(0)).collect::<Vec<_>>();
+    fn new<P: AsRef<Path>>(path: P) -> ModuleBuilder {
+        let path = path.as_ref().as_os_str().encode_wide().chain(Some(0)).collect::<Vec<_>>();
 
         ModuleBuilder {
             path: path
@@ -178,8 +183,25 @@ impl ModuleBuilderWithInit {
     ///
     /// The argument needs to be serializable with `serde`.
     pub fn arg<T: ?Sized + Serialize>(mut self, arg: &T) -> SerializeResult<ModuleBuilderWithInit> {
+        let data = try!(serde::serialize(&arg, SizeLimit::Infinite));
+
         let mut args = mem::replace(&mut self.args, Vec::new());
-        try!(serde::serialize_into(&mut args, &arg, SizeLimit::Infinite));
+        args.push(InitArg::Serialized(data));
+
+        Ok(ModuleBuilderWithInit {
+            args: args,
+            ..self
+        })
+    }
+
+    /// Adds a handle argument to the initializer invocation.
+    ///
+    /// Handles get duplicated into the target process before they are serialized. They can be
+    /// accessed in the initializer function with a parameter of type `Shared`.
+    pub fn handle<H: ?Sized + AsRawHandle>(mut self, handle: &H) -> io::Result<ModuleBuilderWithInit> {
+        let mut args = mem::replace(&mut self.args, Vec::new());
+        args.push(InitArg::Handle(try!(Handle::duplicate_from(handle.as_raw_handle(), false))));
+
         Ok(ModuleBuilderWithInit {
             args: args,
             ..self
@@ -201,7 +223,7 @@ impl ModuleBuilderWithInit {
 /// function and optional arguments for said function.
 pub struct Module {
     path: Vec<u16>,
-    init: Option<(Vec<u8>, Vec<u8>)>
+    init: Option<(Vec<u8>, Vec<InitArg>)>
 }
 
 impl Module {
@@ -211,10 +233,34 @@ impl Module {
     }
 
     fn copy_to_process<'a>(&self, process: &'a Handle) -> io::Result<(RemoteMemory<'a>, *mut ThreadParam)> {
+        let init = match self.init {
+            None => None,
+            Some((ref init, ref args)) => {
+                let mut serialized_args = Vec::new();
+                for arg in args {
+                    match *arg {
+                        InitArg::Serialized(ref data) => serialized_args.extend(data.iter()),
+                        InitArg::Handle(ref handle) => {
+                            let mut copied_handle = unsafe { mem::uninitialized() };
+                            let current_process = unsafe { k32::GetCurrentProcess() };
+                            if unsafe { k32::DuplicateHandle(current_process, handle.as_raw_handle(), process.as_raw_handle(), &mut copied_handle,
+                                                             0, w::FALSE, w::DUPLICATE_SAME_ACCESS) } == w::FALSE
+                            {
+                                return Err(io::Error::last_os_error());
+                            }
+
+                            serde::serialize_into(&mut serialized_args, &(copied_handle as usize), SizeLimit::Infinite).expect("internal error");
+                        }
+                    }
+                }
+                Some((init, serialized_args))
+            }
+        };
+
         let mut size = mem::size_of_val(&self.path[..]) +
                        mem::size_of::<ThreadParam>();
 
-        if let &Some((ref init, ref args)) = &self.init {
+        if let &Some((init, ref args)) = &init {
             size += mem::size_of_val(&init[..]) +
                     mem::size_of_val(&args[..])
         }
@@ -222,7 +268,7 @@ impl Module {
         let mut remote = try!(RemoteMemory::new(process, size, false));
         let module_path = try!(remote.write_slice(&self.path[..]));
 
-        let (init_name, user_data, user_len) = if let &Some((ref init, ref args)) = &self.init {
+        let (init_name, user_data, user_len) = if let &Some((init, ref args)) = &init {
             let init_name = try!(remote.write_slice(&init[..]));
             let user_data = try!(remote.write_slice(&args[..]));
 
@@ -274,25 +320,35 @@ const ERROR_LOAD_FAILED: w::DWORD = 1;
 const ERROR_INIT_NOT_FOUND: w::DWORD = 2;
 const ERROR_INIT_FAILED: w::DWORD = 3;
 
+/// An error that can occur during the injection process.
 #[derive(Debug)]
 pub enum Error {
-    Architecture,
+    /// The target process's bitness (32-bit vs 64-bit) does not match the current process's bitness.
+    Bitness,
+    /// The module could not be loaded into the target process.
     LoadFailed(io::Error),
+    /// The module's initializer function was not found.
     InitNotFound(io::Error),
+    /// An error occurred when the initializer function was called.
     InitError(Option<InitError>),
+    /// An error occurred while deserializing the error message.
     Deserialize(DeserializeError),
+    /// The remote injection thread returned an unexpected exit code and probably crashed.
+    UnexpectedExitCode(u32),
+    /// An I/O error occurred.
     Io(io::Error)
 }
 
 impl Display for Error {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         match *self {
-            Error::Architecture => write!(formatter, "Target application's architecture does not match"),
+            Error::Bitness => write!(formatter, "Target process's bitness does not match"),
             Error::LoadFailed(ref error) => write!(formatter, "Failed to load module: {}", error),
             Error::InitNotFound(ref error) => write!(formatter, "Failed to find initializer function: {}", error),
             Error::InitError(None) => write!(formatter, "Unspecified error during initialization"),
             Error::InitError(Some(ref error)) => write!(formatter, "Error during initialization: {}", error),
             Error::Deserialize(ref error) => write!(formatter, "Error deserializing initialization error: {}", error),
+            Error::UnexpectedExitCode(code) => write!(formatter, "Remote thread returned unexpected exit code: {}", code),
             Error::Io(ref error) => write!(formatter, "An I/O error occurred: {}", error)
         }
     }
@@ -300,7 +356,15 @@ impl Display for Error {
 
 impl error::Error for Error {
     fn description(&self) -> &str {
-        "injection error"
+        match *self {
+            Error::Bitness => "mismatched bitness",
+            Error::LoadFailed(_) => "failed to load module",
+            Error::InitNotFound(_) => "initializer function not found",
+            Error::InitError(_) => "initializer error",
+            Error::Deserialize(_) => "deserialization error",
+            Error::UnexpectedExitCode(_) => "unexpected error code",
+            Error::Io(_) => "I/O error"
+        }
     }
 
     fn cause(&self) -> Option<&error::Error> {
@@ -343,7 +407,7 @@ pub struct Injector<'a> {
 
 impl<'a> Injector<'a> {
     pub fn new(process: &Handle) -> io::Result<Injector> {
-        try!(check_same_architecture(process));
+        try!(check_same_bitness(process));
 
         let thunk = get_thunk();
         let mut code = try!(RemoteMemory::new(process, mem::size_of_val(thunk), true));
@@ -394,13 +458,13 @@ impl<'a> Injector<'a> {
                     Err(Error::InitError(Some(deserialized_error)))
                 }
             },
-            code => panic!("an unexpected exit code was returned: {}", code),
+            code => Err(Error::UnexpectedExitCode(code))
         }
     }
 }
 
 #[cfg(target_arch = "x86")]
-fn check_same_architecture(process: &Handle) -> Result<()> {
+fn check_same_bitness(process: &Handle) -> Result<()> {
     let mut si = unsafe { mem::uninitialized() };
     unsafe { k32::GetNativeSystemInfo(&mut si); }
     if si.wProcessorArchitecture == 0 /* w::PROCESSOR_ARCHITECTURE_INTEL */ {
@@ -415,12 +479,12 @@ fn check_same_architecture(process: &Handle) -> Result<()> {
     if wow64 == w::TRUE {
         Ok(())
     } else {
-        Err(Error::Architecture)
+        Err(Error::Bitness)
     }
 }
 
 #[cfg(target_arch = "x86_64")]
-fn check_same_architecture(process: &Handle) -> Result<()> {
+fn check_same_bitness(process: &Handle) -> Result<()> {
     let mut wow64 = unsafe { mem::uninitialized() };
     if unsafe { k32::IsWow64Process(process.as_inner(), &mut wow64) } == w::FALSE {
         return Err(Error::Io(io::Error::last_os_error()));
@@ -429,7 +493,7 @@ fn check_same_architecture(process: &Handle) -> Result<()> {
     if wow64 == w::FALSE {
         Ok(())
     } else {
-        Err(Error::Architecture)
+        Err(Error::Bitness)
     }
 }
 

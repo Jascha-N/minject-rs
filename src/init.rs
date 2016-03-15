@@ -10,10 +10,14 @@ use bincode::{self, SizeLimit};
 use bincode::serde::DeserializeResult;
 use serde::{Serializer, Deserialize, Deserializer};
 
+/// An error that can occur in a call to an initializer function.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum InitError {
+    /// A panic occurred.
     Panic(String),
+    /// An argument could not be deserialized.
     Argument(String, String),
+    /// Too many arguments were supplied.
     TooManyArguments
 }
 

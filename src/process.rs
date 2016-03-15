@@ -17,7 +17,7 @@ use std::os::raw::c_void;
 use {k32, w};
 use miow::pipe::{self, AnonRead, AnonWrite};
 
-use handle::{self, Handle};
+use handle::Handle;
 use inject::{Module, Injector};
 
 struct ProcessGuard(Option<Handle>);
@@ -621,14 +621,14 @@ impl StdioImp {
     fn setup(&self, stdio_id: w::DWORD) -> io::Result<(Option<(AnonRead, AnonWrite)>, Handle)> {
         match *self {
             StdioImp::Raw(handle) => {
-                Ok((None, try!(handle::duplicate(handle, true))))
+                Ok((None, try!(Handle::duplicate_from(handle, true))))
             }
             StdioImp::MakePipe => {
                 let (read, write): (AnonRead, AnonWrite) = try!(pipe::anonymous(0));
                 let handle = try!(if stdio_id == w::STD_INPUT_HANDLE {
-                    handle::duplicate(read.as_raw_handle(), true)
+                    Handle::duplicate_from(read.as_raw_handle(), true)
                 } else {
-                    handle::duplicate(write.as_raw_handle(), true)
+                    Handle::duplicate_from(write.as_raw_handle(), true)
                 });
 
                 Ok((Some((read, write)), handle))
@@ -641,7 +641,7 @@ impl StdioImp {
                     return Err(io::Error::new(io::ErrorKind::Other,
                                               "no stdio handle available for this process"));
                 }
-                let handle = try!(handle::duplicate(handle, true));
+                let handle = try!(Handle::duplicate_from(handle, true));
 
                 Ok((None, handle))
             }

@@ -20,4 +20,6 @@ pub mod init;
 pub mod process;
 
 pub use inject::{Error, Module, ModuleBuilder, ModuleBuilderWithInit};
+#[doc(inline)]
 pub use init::InitError;
+pub use handle::Shared;
