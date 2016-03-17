@@ -480,7 +480,7 @@ impl Command {
 
         if !self.modules.is_empty() {
             let injector = try!(Injector::new(&process));
-            for module in &mut self.modules {
+            for module in &self.modules {
                 try!(injector.inject(module));
             }
         }
