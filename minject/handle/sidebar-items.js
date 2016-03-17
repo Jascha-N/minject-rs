@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Shared","A helper type for deserializing objects that can be constructed from a raw handle."]]});

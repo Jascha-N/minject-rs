@@ -46,7 +46,7 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-0' class='srclink' href='../src/minject/src/lib.rs.html#1-19' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-0' class='srclink' href='../src/minject/src/lib.rs.html#1-25' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'>
 <h1 id='the-minject-rs-library' class='section-header'><a href='#the-minject-rs-library'>The minject-rs library</a></h1>
 <p>This library provides a simple API for injecting code (in the form of a DLL)
@@ -93,6 +93,31 @@ inside the <code>std::process</code> module.</p>
                                title='minject::ModuleBuilderWithInit'>ModuleBuilderWithInit</a></td>
                         <td class='docblock short'>
                              <p>A module builder for a module with an initialization function.</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='struct' href='struct.Shared.html'
+                               title='minject::Shared'>Shared</a></td>
+                        <td class='docblock short'>
+                             <p>A helper type for deserializing objects that can be constructed from a raw handle.</p>
+                        </td>
+                    </tr>
+                </table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.Error.html'
+                               title='minject::Error'>Error</a></td>
+                        <td class='docblock short'>
+                             <p>An error that can occur during the injection process.</p>
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.InitError.html'
+                               title='minject::InitError'>InitError</a></td>
+                        <td class='docblock short'>
+                             <p>An error that can occur in a call to an initializer function.</p>
                         </td>
                     </tr>
                 </table></section>

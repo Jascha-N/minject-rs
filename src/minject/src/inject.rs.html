@@ -462,19 +462,149 @@
 <span id="419">419</span>
 <span id="420">420</span>
 <span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
 </pre><pre class='rust '>
-<span class='kw'>use</span> <span class='ident'>std</span>::{<span class='ident'>io</span>, <span class='ident'>ptr</span>, <span class='ident'>mem</span>};
+<span class='kw'>use</span> <span class='ident'>std</span>::{<span class='ident'>ptr</span>, <span class='ident'>mem</span>, <span class='ident'>error</span>};
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::{<span class='self'>self</span>, <span class='ident'>Display</span>, <span class='ident'>Formatter</span>};
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='self'>self</span>, <span class='ident'>ErrorKind</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>sync</span>::{<span class='ident'>Once</span>, <span class='ident'>ONCE_INIT</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>path</span>::<span class='ident'>Path</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>os</span>::<span class='ident'>windows</span>::<span class='ident'>prelude</span>::<span class='op'>*</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>prelude</span>::<span class='op'>*</span>;
 
-<span class='kw'>use</span> {<span class='ident'>w</span>, <span class='ident'>k32</span>, <span class='ident'>serde_json</span>};
+<span class='kw'>use</span> {<span class='ident'>w</span>, <span class='ident'>k32</span>};
+<span class='kw'>use</span> <span class='ident'>bincode</span>::<span class='ident'>SizeLimit</span>;
+<span class='kw'>use</span> <span class='ident'>bincode</span>::<span class='ident'>serde</span>::{<span class='self'>self</span>, <span class='ident'>DeserializeError</span>, <span class='ident'>SerializeResult</span>};
 <span class='kw'>use</span> <span class='ident'>byteorder</span>::{<span class='ident'>WriteBytesExt</span>, <span class='ident'>NativeEndian</span>};
 <span class='kw'>use</span> <span class='ident'>serde</span>::<span class='ident'>Serialize</span>;
-<span class='kw'>use</span> <span class='ident'>serde_json</span>::<span class='ident'>builder</span>::<span class='ident'>ArrayBuilder</span>;
 
 <span class='kw'>use</span> <span class='ident'>handle</span>::<span class='ident'>Handle</span>;
+<span class='kw'>use</span> <span class='ident'>init</span>::<span class='ident'>InitError</span>;
 
 <span class='kw'>struct</span> <span class='ident'>RemoteMemory</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
     <span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>Handle</span>,
@@ -485,7 +615,7 @@
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>RemoteMemory</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
     <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='ident'>Handle</span>, <span class='ident'>size</span>: <span class='ident'>usize</span>, <span class='ident'>executable</span>: <span class='ident'>bool</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>RemoteMemory</span><span class='op'>&gt;</span> {
         <span class='kw'>if</span> <span class='ident'>size</span> <span class='op'>==</span> <span class='number'>0</span> {
-            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>, <span class='string'>&quot;size is zero&quot;</span>));
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>, <span class='string'>&quot;size is zero&quot;</span>));
         }
 
         <span class='kw'>let</span> <span class='ident'>protect</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='ident'>executable</span> {
@@ -561,9 +691,9 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>value</span>)
     }
 
-    <span class='kw'>unsafe</span> <span class='kw'>fn</span> <span class='ident'>read_string</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>remote_ptr</span>: <span class='op'>*</span><span class='kw'>const</span> <span class='ident'>u8</span>, <span class='ident'>length</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
+    <span class='kw'>unsafe</span> <span class='kw'>fn</span> <span class='ident'>read_vec</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Copy</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>remote_ptr</span>: <span class='op'>*</span><span class='kw'>const</span> <span class='ident'>T</span>, <span class='ident'>length</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;&gt;</span> {
         <span class='kw'>if</span> <span class='ident'>length</span> <span class='op'>==</span> <span class='number'>0</span> {
-            <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>String</span>::<span class='ident'>new</span>())
+            <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>Vec</span>::<span class='ident'>new</span>());
         }
 
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>buffer</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>with_capacity</span>(<span class='ident'>length</span>);
@@ -578,7 +708,7 @@
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>());
         }
 
-        <span class='prelude-val'>Ok</span>(<span class='ident'>String</span>::<span class='ident'>from_utf8_unchecked</span>(<span class='ident'>buffer</span>))
+        <span class='prelude-val'>Ok</span>(<span class='ident'>buffer</span>)
     }
 }
 
@@ -598,12 +728,17 @@
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>ModuleBuilderWithInit</span> {
     <span class='ident'>path</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u16</span><span class='op'>&gt;</span>,
     <span class='ident'>init</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>,
-    <span class='ident'>args</span>: <span class='ident'>ArrayBuilder</span>
+    <span class='ident'>args</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>InitArg</span><span class='op'>&gt;</span>
+}
+
+<span class='kw'>enum</span> <span class='ident'>InitArg</span> {
+    <span class='ident'>Serialized</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>),
+    <span class='ident'>Handle</span>(<span class='ident'>Handle</span>)
 }
 
 <span class='kw'>impl</span> <span class='ident'>ModuleBuilder</span> {
-    <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>path</span>: <span class='kw-2'>&amp;</span><span class='ident'>Path</span>) <span class='op'>-&gt;</span> <span class='ident'>ModuleBuilder</span> {
-        <span class='kw'>let</span> <span class='ident'>path</span> <span class='op'>=</span> <span class='ident'>path</span>.<span class='ident'>as_os_str</span>().<span class='ident'>encode_wide</span>().<span class='ident'>chain</span>(<span class='prelude-val'>Some</span>(<span class='number'>0</span>)).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>();
+    <span class='kw'>fn</span> <span class='ident'>new</span><span class='op'>&lt;</span><span class='ident'>P</span>: <span class='ident'>AsRef</span><span class='op'>&lt;</span><span class='ident'>Path</span><span class='op'>&gt;&gt;</span>(<span class='ident'>path</span>: <span class='ident'>P</span>) <span class='op'>-&gt;</span> <span class='ident'>ModuleBuilder</span> {
+        <span class='kw'>let</span> <span class='ident'>path</span> <span class='op'>=</span> <span class='ident'>path</span>.<span class='ident'>as_ref</span>().<span class='ident'>as_os_str</span>().<span class='ident'>encode_wide</span>().<span class='ident'>chain</span>(<span class='prelude-val'>Some</span>(<span class='number'>0</span>)).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span>_<span class='op'>&gt;&gt;</span>();
 
         <span class='ident'>ModuleBuilder</span> {
             <span class='ident'>path</span>: <span class='ident'>path</span>
@@ -621,7 +756,7 @@
         <span class='ident'>ModuleBuilderWithInit</span> {
             <span class='ident'>path</span>: <span class='self'>self</span>.<span class='ident'>path</span>,
             <span class='ident'>init</span>: <span class='ident'>init</span>,
-            <span class='ident'>args</span>: <span class='ident'>ArrayBuilder</span>::<span class='ident'>new</span>()
+            <span class='ident'>args</span>: <span class='ident'>Vec</span>::<span class='ident'>new</span>()
         }
     }
 
@@ -638,18 +773,37 @@
     <span class='doccomment'>/// Adds an argument to the initializer invocation.</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// The argument needs to be serializable with `serde`.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>arg</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Serialize</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>arg</span>: <span class='ident'>T</span>) <span class='op'>-&gt;</span> <span class='ident'>ModuleBuilderWithInit</span> {
-        <span class='ident'>ModuleBuilderWithInit</span> {
-            <span class='ident'>args</span>: <span class='self'>self</span>.<span class='ident'>args</span>.<span class='ident'>push</span>(<span class='ident'>arg</span>),
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>arg</span><span class='op'>&lt;</span><span class='ident'>T</span>: ?<span class='ident'>Sized</span> <span class='op'>+</span> <span class='ident'>Serialize</span><span class='op'>&gt;</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>arg</span>: <span class='kw-2'>&amp;</span><span class='ident'>T</span>) <span class='op'>-&gt;</span> <span class='ident'>SerializeResult</span><span class='op'>&lt;</span><span class='ident'>ModuleBuilderWithInit</span><span class='op'>&gt;</span> {
+        <span class='kw'>let</span> <span class='ident'>data</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>serde</span>::<span class='ident'>serialize</span>(<span class='kw-2'>&amp;</span><span class='ident'>arg</span>, <span class='ident'>SizeLimit</span>::<span class='ident'>Infinite</span>));
+
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>args</span> <span class='op'>=</span> <span class='ident'>mem</span>::<span class='ident'>replace</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>args</span>, <span class='ident'>Vec</span>::<span class='ident'>new</span>());
+        <span class='ident'>args</span>.<span class='ident'>push</span>(<span class='ident'>InitArg</span>::<span class='ident'>Serialized</span>(<span class='ident'>data</span>));
+
+        <span class='prelude-val'>Ok</span>(<span class='ident'>ModuleBuilderWithInit</span> {
+            <span class='ident'>args</span>: <span class='ident'>args</span>,
             ..<span class='self'>self</span>
-        }
+        })
+    }
+
+    <span class='doccomment'>/// Adds a handle argument to the initializer invocation.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// Handles get duplicated into the target process before they are serialized. They can be</span>
+    <span class='doccomment'>/// accessed in the initializer function with a parameter of type `Shared`.</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>handle</span><span class='op'>&lt;</span><span class='ident'>H</span>: ?<span class='ident'>Sized</span> <span class='op'>+</span> <span class='ident'>AsRawHandle</span><span class='op'>&gt;</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>handle</span>: <span class='kw-2'>&amp;</span><span class='ident'>H</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>ModuleBuilderWithInit</span><span class='op'>&gt;</span> {
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>args</span> <span class='op'>=</span> <span class='ident'>mem</span>::<span class='ident'>replace</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>args</span>, <span class='ident'>Vec</span>::<span class='ident'>new</span>());
+        <span class='ident'>args</span>.<span class='ident'>push</span>(<span class='ident'>InitArg</span>::<span class='ident'>Handle</span>(<span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>Handle</span>::<span class='ident'>duplicate_from</span>(<span class='ident'>handle</span>.<span class='ident'>as_raw_handle</span>(), <span class='boolval'>false</span>))));
+
+        <span class='prelude-val'>Ok</span>(<span class='ident'>ModuleBuilderWithInit</span> {
+            <span class='ident'>args</span>: <span class='ident'>args</span>,
+            ..<span class='self'>self</span>
+        })
     }
 
     <span class='doccomment'>/// Constructs a module and consumes this builder.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>unwrap</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>Module</span> {
         <span class='ident'>Module</span> {
             <span class='ident'>path</span>: <span class='self'>self</span>.<span class='ident'>path</span>,
-            <span class='ident'>init</span>: <span class='prelude-val'>Some</span>((<span class='self'>self</span>.<span class='ident'>init</span>, <span class='ident'>serde_json</span>::<span class='ident'>to_vec</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>args</span>.<span class='ident'>unwrap</span>()).<span class='ident'>unwrap</span>()))
+            <span class='ident'>init</span>: <span class='prelude-val'>Some</span>((<span class='self'>self</span>.<span class='ident'>init</span>, <span class='self'>self</span>.<span class='ident'>args</span>))
         }
     }
 }
@@ -660,7 +814,7 @@
 <span class='doccomment'>/// function and optional arguments for said function.</span>
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Module</span> {
     <span class='ident'>path</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u16</span><span class='op'>&gt;</span>,
-    <span class='ident'>init</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>)<span class='op'>&gt;</span>
+    <span class='ident'>init</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span>(<span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>InitArg</span><span class='op'>&gt;</span>)<span class='op'>&gt;</span>
 }
 
 <span class='kw'>impl</span> <span class='ident'>Module</span> {
@@ -670,10 +824,34 @@
     }
 
     <span class='kw'>fn</span> <span class='ident'>copy_to_process</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>Handle</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(<span class='ident'>RemoteMemory</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>, <span class='op'>*</span><span class='kw-2'>mut</span> <span class='ident'>ThreadParam</span>)<span class='op'>&gt;</span> {
+        <span class='kw'>let</span> <span class='ident'>init</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='self'>self</span>.<span class='ident'>init</span> {
+            <span class='prelude-val'>None</span> <span class='op'>=&gt;</span> <span class='prelude-val'>None</span>,
+            <span class='prelude-val'>Some</span>((<span class='kw-2'>ref</span> <span class='ident'>init</span>, <span class='kw-2'>ref</span> <span class='ident'>args</span>)) <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>serialized_args</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>();
+                <span class='kw'>for</span> <span class='ident'>arg</span> <span class='kw'>in</span> <span class='ident'>args</span> {
+                    <span class='kw'>match</span> <span class='op'>*</span><span class='ident'>arg</span> {
+                        <span class='ident'>InitArg</span>::<span class='ident'>Serialized</span>(<span class='kw-2'>ref</span> <span class='ident'>data</span>) <span class='op'>=&gt;</span> <span class='ident'>serialized_args</span>.<span class='ident'>extend</span>(<span class='ident'>data</span>.<span class='ident'>iter</span>()),
+                        <span class='ident'>InitArg</span>::<span class='ident'>Handle</span>(<span class='kw-2'>ref</span> <span class='ident'>handle</span>) <span class='op'>=&gt;</span> {
+                            <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>copied_handle</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>mem</span>::<span class='ident'>uninitialized</span>() };
+                            <span class='kw'>let</span> <span class='ident'>current_process</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>k32</span>::<span class='ident'>GetCurrentProcess</span>() };
+                            <span class='kw'>if</span> <span class='kw'>unsafe</span> { <span class='ident'>k32</span>::<span class='ident'>DuplicateHandle</span>(<span class='ident'>current_process</span>, <span class='ident'>handle</span>.<span class='ident'>as_raw_handle</span>(), <span class='ident'>process</span>.<span class='ident'>as_raw_handle</span>(), <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>copied_handle</span>,
+                                                             <span class='number'>0</span>, <span class='ident'>w</span>::<span class='ident'>FALSE</span>, <span class='ident'>w</span>::<span class='ident'>DUPLICATE_SAME_ACCESS</span>) } <span class='op'>==</span> <span class='ident'>w</span>::<span class='ident'>FALSE</span>
+                            {
+                                <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>());
+                            }
+
+                            <span class='ident'>serde</span>::<span class='ident'>serialize_into</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>serialized_args</span>, <span class='kw-2'>&amp;</span>(<span class='ident'>copied_handle</span> <span class='kw'>as</span> <span class='ident'>usize</span>), <span class='ident'>SizeLimit</span>::<span class='ident'>Infinite</span>).<span class='ident'>expect</span>(<span class='string'>&quot;internal error&quot;</span>);
+                        }
+                    }
+                }
+                <span class='prelude-val'>Some</span>((<span class='ident'>init</span>, <span class='ident'>serialized_args</span>))
+            }
+        };
+
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>size</span> <span class='op'>=</span> <span class='ident'>mem</span>::<span class='ident'>size_of_val</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>path</span>[..]) <span class='op'>+</span>
                        <span class='ident'>mem</span>::<span class='ident'>size_of</span>::<span class='op'>&lt;</span><span class='ident'>ThreadParam</span><span class='op'>&gt;</span>();
 
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='prelude-val'>Some</span>((<span class='kw-2'>ref</span> <span class='ident'>init</span>, <span class='kw-2'>ref</span> <span class='ident'>args</span>)) <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>init</span> {
+        <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='prelude-val'>Some</span>((<span class='ident'>init</span>, <span class='kw-2'>ref</span> <span class='ident'>args</span>)) <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>init</span> {
             <span class='ident'>size</span> <span class='op'>+=</span> <span class='ident'>mem</span>::<span class='ident'>size_of_val</span>(<span class='kw-2'>&amp;</span><span class='ident'>init</span>[..]) <span class='op'>+</span>
                     <span class='ident'>mem</span>::<span class='ident'>size_of_val</span>(<span class='kw-2'>&amp;</span><span class='ident'>args</span>[..])
         }
@@ -681,7 +859,7 @@
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>remote</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>RemoteMemory</span>::<span class='ident'>new</span>(<span class='ident'>process</span>, <span class='ident'>size</span>, <span class='boolval'>false</span>));
         <span class='kw'>let</span> <span class='ident'>module_path</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>remote</span>.<span class='ident'>write_slice</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>path</span>[..]));
 
-        <span class='kw'>let</span> (<span class='ident'>init_name</span>, <span class='ident'>user_data</span>, <span class='ident'>user_len</span>) <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='prelude-val'>Some</span>((<span class='kw-2'>ref</span> <span class='ident'>init</span>, <span class='kw-2'>ref</span> <span class='ident'>args</span>)) <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>init</span> {
+        <span class='kw'>let</span> (<span class='ident'>init_name</span>, <span class='ident'>user_data</span>, <span class='ident'>user_len</span>) <span class='op'>=</span> <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='prelude-val'>Some</span>((<span class='ident'>init</span>, <span class='kw-2'>ref</span> <span class='ident'>args</span>)) <span class='op'>=</span> <span class='kw-2'>&amp;</span><span class='ident'>init</span> {
             <span class='kw'>let</span> <span class='ident'>init_name</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>remote</span>.<span class='ident'>write_slice</span>(<span class='kw-2'>&amp;</span><span class='ident'>init</span>[..]));
             <span class='kw'>let</span> <span class='ident'>user_data</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>remote</span>.<span class='ident'>write_slice</span>(<span class='kw-2'>&amp;</span><span class='ident'>args</span>[..]));
 
@@ -733,6 +911,85 @@
 <span class='kw'>const</span> <span class='ident'>ERROR_INIT_NOT_FOUND</span>: <span class='ident'>w</span>::<span class='ident'>DWORD</span> <span class='op'>=</span> <span class='number'>2</span>;
 <span class='kw'>const</span> <span class='ident'>ERROR_INIT_FAILED</span>: <span class='ident'>w</span>::<span class='ident'>DWORD</span> <span class='op'>=</span> <span class='number'>3</span>;
 
+<span class='doccomment'>/// An error that can occur during the injection process.</span>
+<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>)]</span>
+<span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>Error</span> {
+    <span class='doccomment'>/// The target process&#39;s bitness (32-bit vs 64-bit) does not match the current process&#39;s bitness.</span>
+    <span class='ident'>Bitness</span>,
+    <span class='doccomment'>/// The module could not be loaded into the target process.</span>
+    <span class='ident'>LoadFailed</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>),
+    <span class='doccomment'>/// The module&#39;s initializer function was not found.</span>
+    <span class='ident'>InitNotFound</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>),
+    <span class='doccomment'>/// An error occurred when the initializer function was called.</span>
+    <span class='ident'>InitError</span>(<span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>InitError</span><span class='op'>&gt;</span>),
+    <span class='doccomment'>/// An error occurred while deserializing the error message.</span>
+    <span class='ident'>Deserialize</span>(<span class='ident'>DeserializeError</span>),
+    <span class='doccomment'>/// The remote injection thread returned an unexpected exit code and probably crashed.</span>
+    <span class='ident'>UnexpectedExitCode</span>(<span class='ident'>u32</span>),
+    <span class='doccomment'>/// An I/O error occurred.</span>
+    <span class='ident'>Io</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>)
+}
+
+<span class='kw'>impl</span> <span class='ident'>Display</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
+    <span class='kw'>fn</span> <span class='ident'>fmt</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>formatter</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>Formatter</span>) <span class='op'>-&gt;</span> <span class='ident'>fmt</span>::<span class='prelude-ty'>Result</span> {
+        <span class='kw'>match</span> <span class='op'>*</span><span class='self'>self</span> {
+            <span class='ident'>Error</span>::<span class='ident'>Bitness</span> <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;Target process&#39;s bitness does not match&quot;</span>),
+            <span class='ident'>Error</span>::<span class='ident'>LoadFailed</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;Failed to load module: {}&quot;</span>, <span class='ident'>error</span>),
+            <span class='ident'>Error</span>::<span class='ident'>InitNotFound</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;Failed to find initializer function: {}&quot;</span>, <span class='ident'>error</span>),
+            <span class='ident'>Error</span>::<span class='ident'>InitError</span>(<span class='prelude-val'>None</span>) <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;Unspecified error during initialization&quot;</span>),
+            <span class='ident'>Error</span>::<span class='ident'>InitError</span>(<span class='prelude-val'>Some</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>)) <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;Error during initialization: {}&quot;</span>, <span class='ident'>error</span>),
+            <span class='ident'>Error</span>::<span class='ident'>Deserialize</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;Error deserializing initialization error: {}&quot;</span>, <span class='ident'>error</span>),
+            <span class='ident'>Error</span>::<span class='ident'>UnexpectedExitCode</span>(<span class='ident'>code</span>) <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;Remote thread returned unexpected exit code: {}&quot;</span>, <span class='ident'>code</span>),
+            <span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>formatter</span>, <span class='string'>&quot;An I/O error occurred: {}&quot;</span>, <span class='ident'>error</span>)
+        }
+    }
+}
+
+<span class='kw'>impl</span> <span class='ident'>error</span>::<span class='ident'>Error</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
+    <span class='kw'>fn</span> <span class='ident'>description</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
+        <span class='kw'>match</span> <span class='op'>*</span><span class='self'>self</span> {
+            <span class='ident'>Error</span>::<span class='ident'>Bitness</span> <span class='op'>=&gt;</span> <span class='string'>&quot;mismatched bitness&quot;</span>,
+            <span class='ident'>Error</span>::<span class='ident'>LoadFailed</span>(_) <span class='op'>=&gt;</span> <span class='string'>&quot;failed to load module&quot;</span>,
+            <span class='ident'>Error</span>::<span class='ident'>InitNotFound</span>(_) <span class='op'>=&gt;</span> <span class='string'>&quot;initializer function not found&quot;</span>,
+            <span class='ident'>Error</span>::<span class='ident'>InitError</span>(_) <span class='op'>=&gt;</span> <span class='string'>&quot;initializer error&quot;</span>,
+            <span class='ident'>Error</span>::<span class='ident'>Deserialize</span>(_) <span class='op'>=&gt;</span> <span class='string'>&quot;deserialization error&quot;</span>,
+            <span class='ident'>Error</span>::<span class='ident'>UnexpectedExitCode</span>(_) <span class='op'>=&gt;</span> <span class='string'>&quot;unexpected error code&quot;</span>,
+            <span class='ident'>Error</span>::<span class='ident'>Io</span>(_) <span class='op'>=&gt;</span> <span class='string'>&quot;I/O error&quot;</span>
+        }
+    }
+
+    <span class='kw'>fn</span> <span class='ident'>cause</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>error</span>::<span class='ident'>Error</span><span class='op'>&gt;</span> {
+        <span class='kw'>match</span> <span class='op'>*</span><span class='self'>self</span> {
+            <span class='ident'>Error</span>::<span class='ident'>LoadFailed</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>) <span class='op'>|</span> <span class='ident'>Error</span>::<span class='ident'>InitNotFound</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>) <span class='op'>|</span> <span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='prelude-val'>Some</span>(<span class='ident'>error</span>),
+            <span class='ident'>Error</span>::<span class='ident'>InitError</span>(<span class='prelude-val'>Some</span>(<span class='kw-2'>ref</span> <span class='ident'>error</span>)) <span class='op'>=&gt;</span> <span class='prelude-val'>Some</span>(<span class='ident'>error</span>),
+            _ <span class='op'>=&gt;</span> <span class='prelude-val'>None</span>
+        }
+    }
+}
+
+<span class='kw'>impl</span> <span class='ident'>From</span><span class='op'>&lt;</span><span class='ident'>io</span>::<span class='ident'>Error</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
+    <span class='kw'>fn</span> <span class='ident'>from</span>(<span class='ident'>error</span>: <span class='ident'>io</span>::<span class='ident'>Error</span>) <span class='op'>-&gt;</span> <span class='ident'>Error</span> {
+        <span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='ident'>error</span>)
+    }
+}
+
+<span class='kw'>impl</span> <span class='ident'>From</span><span class='op'>&lt;</span><span class='ident'>DeserializeError</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
+    <span class='kw'>fn</span> <span class='ident'>from</span>(<span class='ident'>error</span>: <span class='ident'>DeserializeError</span>) <span class='op'>-&gt;</span> <span class='ident'>Error</span> {
+        <span class='ident'>Error</span>::<span class='ident'>Deserialize</span>(<span class='ident'>error</span>)
+    }
+}
+
+<span class='kw'>impl</span> <span class='ident'>From</span><span class='op'>&lt;</span><span class='ident'>Error</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>io</span>::<span class='ident'>Error</span> {
+    <span class='kw'>fn</span> <span class='ident'>from</span>(<span class='ident'>error</span>: <span class='ident'>Error</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='ident'>Error</span> {
+        <span class='kw'>match</span> <span class='ident'>error</span> {
+            <span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='ident'>error</span>,
+            <span class='ident'>error</span> <span class='op'>=&gt;</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>Other</span>, <span class='ident'>error</span>)
+        }
+    }
+}
+
+<span class='kw'>pub</span> <span class='kw'>type</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> <span class='op'>=</span> ::<span class='ident'>std</span>::<span class='ident'>result</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Error</span><span class='op'>&gt;</span>;
+
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Injector</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
     <span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>Handle</span>,
     <span class='ident'>_code</span>: <span class='ident'>RemoteMemory</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>,
@@ -741,7 +998,7 @@
 
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>Injector</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='ident'>Handle</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Injector</span><span class='op'>&gt;</span> {
-        <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>check_same_architecture</span>(<span class='ident'>process</span>));
+        <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>check_same_bitness</span>(<span class='ident'>process</span>));
 
         <span class='kw'>let</span> <span class='ident'>thunk</span> <span class='op'>=</span> <span class='ident'>get_thunk</span>();
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>code</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>RemoteMemory</span>::<span class='ident'>new</span>(<span class='ident'>process</span>, <span class='ident'>mem</span>::<span class='ident'>size_of_val</span>(<span class='ident'>thunk</span>), <span class='boolval'>true</span>));
@@ -754,7 +1011,7 @@
         })
     }
 
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>inject</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>module</span>: <span class='kw-2'>&amp;</span><span class='ident'>Module</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>inject</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>module</span>: <span class='kw-2'>&amp;</span><span class='ident'>Module</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
         <span class='kw'>let</span> (<span class='ident'>remote_data</span>, <span class='ident'>param</span>) <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>module</span>.<span class='ident'>copy_to_process</span>(<span class='self'>self</span>.<span class='ident'>process</span>));
 
         <span class='kw'>let</span> <span class='ident'>thread</span> <span class='op'>=</span> <span class='kw'>unsafe</span> {
@@ -763,41 +1020,42 @@
                                     <span class='ident'>param</span> <span class='kw'>as</span> <span class='ident'>w</span>::<span class='ident'>LPVOID</span>, <span class='number'>0</span>, <span class='ident'>ptr</span>::<span class='ident'>null_mut</span>())
         };
         <span class='kw'>if</span> <span class='ident'>thread</span>.<span class='ident'>is_null</span>() {
-            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>());
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>()));
         }
         <span class='kw'>let</span> <span class='ident'>thread</span> <span class='op'>=</span> <span class='ident'>Handle</span>::<span class='ident'>new</span>(<span class='ident'>thread</span>);
         <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>thread</span>.<span class='ident'>wait</span>());
 
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>exit_code</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>mem</span>::<span class='ident'>uninitialized</span>() };
         <span class='kw'>if</span> <span class='kw'>unsafe</span> { <span class='ident'>k32</span>::<span class='ident'>GetExitCodeThread</span>(<span class='ident'>thread</span>.<span class='ident'>as_inner</span>(), <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>exit_code</span>) } <span class='op'>==</span> <span class='ident'>w</span>::<span class='ident'>FALSE</span> {
-            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>());
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>()));
         }
 
         <span class='kw'>let</span> <span class='ident'>param</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='kw'>unsafe</span> { <span class='ident'>remote_data</span>.<span class='ident'>read</span>(<span class='ident'>param</span>) });
 
         <span class='kw'>match</span> <span class='ident'>exit_code</span> {
             <span class='ident'>SUCCESS</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Ok</span>(()),
-            <span class='ident'>ERROR_LOAD_FAILED</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>from_raw_os_error</span>(<span class='ident'>param</span>.<span class='ident'>last_error</span> <span class='kw'>as</span> <span class='ident'>i32</span>)),
-            <span class='ident'>ERROR_INIT_NOT_FOUND</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>from_raw_os_error</span>(<span class='ident'>param</span>.<span class='ident'>last_error</span> <span class='kw'>as</span> <span class='ident'>i32</span>)),
+            <span class='ident'>ERROR_LOAD_FAILED</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>LoadFailed</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>from_raw_os_error</span>(<span class='ident'>param</span>.<span class='ident'>last_error</span> <span class='kw'>as</span> <span class='ident'>i32</span>))),
+            <span class='ident'>ERROR_INIT_NOT_FOUND</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InitNotFound</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>from_raw_os_error</span>(<span class='ident'>param</span>.<span class='ident'>last_error</span> <span class='kw'>as</span> <span class='ident'>i32</span>))),
             <span class='ident'>ERROR_INIT_FAILED</span> <span class='op'>=&gt;</span> {
-                <span class='kw'>let</span> <span class='ident'>error_message</span> <span class='op'>=</span> <span class='ident'>param</span>.<span class='ident'>user_data</span>;
+                <span class='kw'>let</span> <span class='ident'>error</span> <span class='op'>=</span> <span class='ident'>param</span>.<span class='ident'>user_data</span>;
                 <span class='kw'>let</span> <span class='ident'>error_length</span> <span class='op'>=</span> <span class='ident'>param</span>.<span class='ident'>user_len</span>;
-                <span class='kw'>if</span> <span class='ident'>error_message</span>.<span class='ident'>is_null</span>() <span class='op'>||</span> <span class='ident'>error_length</span> <span class='op'>==</span> <span class='number'>0</span> {
-                    <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>ErrorKind</span>::<span class='ident'>Other</span>, <span class='string'>&quot;initialization routine panicked&quot;</span>))
+                <span class='kw'>if</span> <span class='ident'>error</span>.<span class='ident'>is_null</span>() <span class='op'>||</span> <span class='ident'>error_length</span> <span class='op'>==</span> <span class='number'>0</span> {
+                    <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InitError</span>(<span class='prelude-val'>None</span>))
                 } <span class='kw'>else</span> {
-                    <span class='kw'>let</span> <span class='ident'>remote_message</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>RemoteMemory</span>::<span class='ident'>from_raw</span>(<span class='self'>self</span>.<span class='ident'>process</span>, <span class='ident'>error_message</span> <span class='kw'>as</span> <span class='op'>*</span><span class='kw-2'>mut</span> _) };
-                    <span class='kw'>let</span> <span class='ident'>error_string</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='kw'>unsafe</span> { <span class='ident'>remote_message</span>.<span class='ident'>read_string</span>(<span class='ident'>error_message</span>, <span class='ident'>error_length</span>) });
+                    <span class='kw'>let</span> <span class='ident'>remote_message</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>RemoteMemory</span>::<span class='ident'>from_raw</span>(<span class='self'>self</span>.<span class='ident'>process</span>, <span class='ident'>error</span> <span class='kw'>as</span> <span class='op'>*</span><span class='kw-2'>mut</span> _) };
+                    <span class='kw'>let</span> <span class='ident'>serialized_error</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='kw'>unsafe</span> { <span class='ident'>remote_message</span>.<span class='ident'>read_vec</span>(<span class='ident'>error</span>, <span class='ident'>error_length</span>) });
+                    <span class='kw'>let</span> <span class='ident'>deserialized_error</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>serde</span>::<span class='ident'>deserialize</span>(<span class='kw-2'>&amp;</span><span class='ident'>serialized_error</span>[..]));
 
-                    <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>ErrorKind</span>::<span class='ident'>Other</span>, <span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;initialization routine panicked: {}&quot;</span>, <span class='ident'>error_string</span>)))
+                    <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>InitError</span>(<span class='prelude-val'>Some</span>(<span class='ident'>deserialized_error</span>)))
                 }
             },
-            <span class='ident'>code</span> <span class='op'>=&gt;</span> <span class='macro'>panic</span><span class='macro'>!</span>(<span class='string'>&quot;an unexpected exit code was returned: {}&quot;</span>, <span class='ident'>code</span>),
+            <span class='ident'>code</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>UnexpectedExitCode</span>(<span class='ident'>code</span>))
         }
     }
 }
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_arch</span> <span class='op'>=</span> <span class='string'>&quot;x86&quot;</span>)]</span>
-<span class='kw'>fn</span> <span class='ident'>check_same_architecture</span>(<span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='ident'>Handle</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
+<span class='kw'>fn</span> <span class='ident'>check_same_bitness</span>(<span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='ident'>Handle</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>si</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>mem</span>::<span class='ident'>uninitialized</span>() };
     <span class='kw'>unsafe</span> { <span class='ident'>k32</span>::<span class='ident'>GetNativeSystemInfo</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>si</span>); }
     <span class='kw'>if</span> <span class='ident'>si</span>.<span class='ident'>wProcessorArchitecture</span> <span class='op'>==</span> <span class='number'>0</span> <span class='comment'>/* w::PROCESSOR_ARCHITECTURE_INTEL */</span> {
@@ -806,29 +1064,27 @@
 
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>wow64</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>mem</span>::<span class='ident'>uninitialized</span>() };
     <span class='kw'>if</span> <span class='kw'>unsafe</span> { <span class='ident'>k32</span>::<span class='ident'>IsWow64Process</span>(<span class='ident'>process</span>.<span class='ident'>as_inner</span>(), <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>wow64</span>) } <span class='op'>==</span> <span class='ident'>w</span>::<span class='ident'>FALSE</span> {
-        <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>());
+        <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>()));
     }
 
     <span class='kw'>if</span> <span class='ident'>wow64</span> <span class='op'>==</span> <span class='ident'>w</span>::<span class='ident'>TRUE</span> {
         <span class='prelude-val'>Ok</span>(())
     } <span class='kw'>else</span> {
-        <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>ErrorKind</span>::<span class='ident'>Other</span>,
-                           <span class='string'>&quot;target process is 64-bit while current process is 32-bit&quot;</span>))
+        <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>Bitness</span>)
     }
 }
 
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_arch</span> <span class='op'>=</span> <span class='string'>&quot;x86_64&quot;</span>)]</span>
-<span class='kw'>fn</span> <span class='ident'>check_same_architecture</span>(<span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='ident'>Handle</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
+<span class='kw'>fn</span> <span class='ident'>check_same_bitness</span>(<span class='ident'>process</span>: <span class='kw-2'>&amp;</span><span class='ident'>Handle</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>wow64</span> <span class='op'>=</span> <span class='kw'>unsafe</span> { <span class='ident'>mem</span>::<span class='ident'>uninitialized</span>() };
     <span class='kw'>if</span> <span class='kw'>unsafe</span> { <span class='ident'>k32</span>::<span class='ident'>IsWow64Process</span>(<span class='ident'>process</span>.<span class='ident'>as_inner</span>(), <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>wow64</span>) } <span class='op'>==</span> <span class='ident'>w</span>::<span class='ident'>FALSE</span> {
-        <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>());
+        <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>last_os_error</span>()));
     }
 
     <span class='kw'>if</span> <span class='ident'>wow64</span> <span class='op'>==</span> <span class='ident'>w</span>::<span class='ident'>FALSE</span> {
         <span class='prelude-val'>Ok</span>(())
     } <span class='kw'>else</span> {
-        <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>ErrorKind</span>::<span class='ident'>Other</span>,
-                           <span class='string'>&quot;target process is 32-bit while current process is 64-bit&quot;</span>))
+        <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>Bitness</span>)
     }
 }
 
@@ -839,11 +1095,7 @@
     <span class='ident'>INIT</span>.<span class='ident'>call_once</span>(<span class='op'>||</span> {
         <span class='kw'>const</span> <span class='ident'>KERNEL32_NAME</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> [<span class='ident'>w</span>::<span class='ident'>WCHAR</span>] <span class='op'>=</span> <span class='kw-2'>&amp;</span>[<span class='number'>0x6B</span>, <span class='number'>0x65</span>, <span class='number'>0x72</span>, <span class='number'>0x6E</span>, <span class='number'>0x65</span>, <span class='number'>0x6C</span>, <span class='number'>0x33</span>, <span class='number'>0x32</span>, <span class='number'>0x2E</span>, <span class='number'>0x64</span>, <span class='number'>0x6C</span>, <span class='number'>0x6C</span>, <span class='number'>0x0</span>];
 
-        <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_arch</span> <span class='op'>=</span> <span class='string'>&quot;x86&quot;</span>)]</span>
-        <span class='kw'>static</span> <span class='ident'>THUNK_CODE</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> [<span class='ident'>u8</span>] <span class='op'>=</span> <span class='macro'>include_bytes</span><span class='macro'>!</span>(<span class='string'>&quot;thunk32.bin&quot;</span>);
-
-        <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_arch</span> <span class='op'>=</span> <span class='string'>&quot;x86_64&quot;</span>)]</span>
-        <span class='kw'>static</span> <span class='ident'>THUNK_CODE</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> [<span class='ident'>u8</span>] <span class='op'>=</span> <span class='macro'>include_bytes</span><span class='macro'>!</span>(<span class='string'>&quot;thunk64.bin&quot;</span>);
+        <span class='kw'>static</span> <span class='ident'>THUNK_CODE</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> [<span class='ident'>u8</span>] <span class='op'>=</span> <span class='macro'>include_bytes</span><span class='macro'>!</span>(<span class='macro'>concat</span><span class='macro'>!</span>(<span class='macro'>env</span><span class='macro'>!</span>(<span class='string'>&quot;OUT_DIR&quot;</span>), <span class='string'>&quot;/thunk.bin&quot;</span>));
 
         <span class='kw'>fn</span> <span class='ident'>write_function</span>(<span class='ident'>vec</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>module</span>: <span class='ident'>w</span>::<span class='ident'>HMODULE</span>, <span class='ident'>name</span>: <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]) {
             <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_arch</span> <span class='op'>=</span> <span class='string'>&quot;x86&quot;</span>)]</span>

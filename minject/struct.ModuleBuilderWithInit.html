@@ -46,14 +46,19 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-107' class='srclink' href='../src/minject/src/inject.rs.html#133-137' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-152' class='srclink' href='../src/minject/src/inject.rs.html#137-141' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct ModuleBuilderWithInit {
     // some fields omitted
 }</pre><div class='docblock'><p>A module builder for a module with an initialization function.</p>
-</div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../minject/struct.ModuleBuilderWithInit.html' title='minject::ModuleBuilderWithInit'>ModuleBuilderWithInit</a></code></h3><div class='impl-items'><h4 id='method.arg' class='method'><code>fn <a href='#method.arg' class='fnname'>arg</a>&lt;T: <a class='trait' href='https://serde-rs.github.io/serde/serde/serde/ser/trait.Serialize.html' title='serde::ser::Serialize'>Serialize</a>&gt;(self, arg: T) -&gt; <a class='struct' href='../minject/struct.ModuleBuilderWithInit.html' title='minject::ModuleBuilderWithInit'>ModuleBuilderWithInit</a></code></h4>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../minject/struct.ModuleBuilderWithInit.html' title='minject::ModuleBuilderWithInit'>ModuleBuilderWithInit</a></code></h3><div class='impl-items'><h4 id='method.arg' class='method'><code>fn <a href='#method.arg' class='fnname'>arg</a>&lt;T: ?<a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a> + <a class='trait' href='https://serde-rs.github.io/serde/serde/serde/ser/trait.Serialize.html' title='serde::ser::Serialize'>Serialize</a>&gt;(self, arg: &amp;T) -&gt; SerializeResult&lt;<a class='struct' href='../minject/struct.ModuleBuilderWithInit.html' title='minject::ModuleBuilderWithInit'>ModuleBuilderWithInit</a>&gt;</code></h4>
 <div class='docblock'><p>Adds an argument to the initializer invocation.</p>
 
 <p>The argument needs to be serializable with <code>serde</code>.</p>
+</div><h4 id='method.handle' class='method'><code>fn <a href='#method.handle' class='fnname'>handle</a>&lt;H: ?<a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.AsRawHandle.html' title='std::sys::ext::io::AsRawHandle'>AsRawHandle</a>&gt;(self, handle: &amp;H) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../minject/struct.ModuleBuilderWithInit.html' title='minject::ModuleBuilderWithInit'>ModuleBuilderWithInit</a>&gt;</code></h4>
+<div class='docblock'><p>Adds a handle argument to the initializer invocation.</p>
+
+<p>Handles get duplicated into the target process before they are serialized. They can be
+accessed in the initializer function with a parameter of type <code>Shared</code>.</p>
 </div><h4 id='method.unwrap' class='method'><code>fn <a href='#method.unwrap' class='fnname'>unwrap</a>(self) -&gt; <a class='struct' href='../minject/struct.Module.html' title='minject::Module'>Module</a></code></h4>
 <div class='docblock'><p>Constructs a module and consumes this builder.</p>
 </div></div></section>
