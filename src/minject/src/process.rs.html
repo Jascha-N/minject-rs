@@ -788,7 +788,6 @@
 <span id="745">745</span>
 <span id="746">746</span>
 <span id="747">747</span>
-<span id="748">748</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! This module provides a drop-in replacement for most of the functionality</span>
 <span class='doccomment'>//! inside the `std::process` module.</span>
@@ -910,17 +909,15 @@
     <span class='doccomment'>/// child does not block waiting for input from the parent, while</span>
     <span class='doccomment'>/// the parent waits for the child to exit.</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>wait_with_output</span>(<span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Output</span><span class='op'>&gt;</span> {
-        <span class='ident'>mem</span>::<span class='ident'>drop</span>(<span class='self'>self</span>.<span class='ident'>stdin</span>.<span class='ident'>take</span>());
-
         <span class='kw'>fn</span> <span class='ident'>read</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>io</span>::<span class='ident'>Read</span> <span class='op'>+</span> <span class='ident'>Send</span> <span class='op'>+</span> <span class='lifetime'>&#39;static</span><span class='op'>&gt;</span>(<span class='ident'>stream</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>Receiver</span><span class='op'>&lt;</span><span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;&gt;</span><span class='op'>&gt;</span> {
             <span class='kw'>let</span> (<span class='ident'>tx</span>, <span class='ident'>rx</span>) <span class='op'>=</span> <span class='ident'>mpsc</span>::<span class='ident'>channel</span>();
             <span class='kw'>match</span> <span class='ident'>stream</span> {
                 <span class='prelude-val'>Some</span>(<span class='ident'>stream</span>) <span class='op'>=&gt;</span> {
                     <span class='ident'>thread</span>::<span class='ident'>spawn</span>(<span class='kw'>move</span> <span class='op'>||</span> {
                         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>stream</span> <span class='op'>=</span> <span class='ident'>stream</span>;
-                        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>ret</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>();
-                        <span class='kw'>let</span> <span class='ident'>res</span> <span class='op'>=</span> <span class='ident'>stream</span>.<span class='ident'>read_to_end</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>ret</span>);
-                        <span class='ident'>tx</span>.<span class='ident'>send</span>(<span class='ident'>res</span>.<span class='ident'>map</span>(<span class='op'>|</span>_<span class='op'>|</span> <span class='ident'>ret</span>)).<span class='ident'>unwrap</span>();
+                        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>vec</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>();
+                        <span class='kw'>let</span> <span class='ident'>res</span> <span class='op'>=</span> <span class='ident'>stream</span>.<span class='ident'>read_to_end</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>vec</span>);
+                        <span class='ident'>tx</span>.<span class='ident'>send</span>(<span class='ident'>res</span>.<span class='ident'>map</span>(<span class='op'>|</span>_<span class='op'>|</span> <span class='ident'>vec</span>)).<span class='ident'>unwrap</span>();
                     });
                 }
                 <span class='prelude-val'>None</span> <span class='op'>=&gt;</span> <span class='ident'>tx</span>.<span class='ident'>send</span>(<span class='prelude-val'>Ok</span>(<span class='ident'>Vec</span>::<span class='ident'>new</span>())).<span class='ident'>unwrap</span>()
@@ -928,14 +925,16 @@
             <span class='ident'>rx</span>
         }
 
+        <span class='ident'>mem</span>::<span class='ident'>drop</span>(<span class='self'>self</span>.<span class='ident'>stdin</span>.<span class='ident'>take</span>());
+
         <span class='kw'>let</span> <span class='ident'>stdout</span> <span class='op'>=</span> <span class='ident'>read</span>(<span class='self'>self</span>.<span class='ident'>stdout</span>.<span class='ident'>take</span>());
         <span class='kw'>let</span> <span class='ident'>stderr</span> <span class='op'>=</span> <span class='ident'>read</span>(<span class='self'>self</span>.<span class='ident'>stderr</span>.<span class='ident'>take</span>());
         <span class='kw'>let</span> <span class='ident'>status</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>wait</span>());
 
         <span class='prelude-val'>Ok</span>(<span class='ident'>Output</span> {
             <span class='ident'>status</span>: <span class='ident'>status</span>,
-            <span class='ident'>stdout</span>: <span class='ident'>stdout</span>.<span class='ident'>recv</span>().<span class='ident'>unwrap</span>().<span class='ident'>unwrap_or</span>(<span class='ident'>Vec</span>::<span class='ident'>new</span>()),
-            <span class='ident'>stderr</span>: <span class='ident'>stderr</span>.<span class='ident'>recv</span>().<span class='ident'>unwrap</span>().<span class='ident'>unwrap_or</span>(<span class='ident'>Vec</span>::<span class='ident'>new</span>())
+            <span class='ident'>stdout</span>: <span class='ident'>stdout</span>.<span class='ident'>recv</span>().<span class='ident'>unwrap</span>().<span class='ident'>unwrap_or_else</span>(<span class='op'>|</span>_<span class='op'>|</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>()),
+            <span class='ident'>stderr</span>: <span class='ident'>stderr</span>.<span class='ident'>recv</span>().<span class='ident'>unwrap</span>().<span class='ident'>unwrap_or_else</span>(<span class='op'>|</span>_<span class='op'>|</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>())
         })
     }
 }
@@ -1478,9 +1477,8 @@
     <span class='kw'>fn</span> <span class='ident'>append_arg</span>(<span class='ident'>cmd</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u16</span><span class='op'>&gt;</span>, <span class='ident'>arg</span>: <span class='kw-2'>&amp;</span><span class='ident'>OsStr</span>) {
         <span class='ident'>cmd</span>.<span class='ident'>push</span>(<span class='string'>&#39;&quot;&#39;</span> <span class='kw'>as</span> <span class='ident'>u16</span>);
 
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>iter</span> <span class='op'>=</span> <span class='ident'>arg</span>.<span class='ident'>encode_wide</span>();
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>backslashes</span> <span class='op'>=</span> <span class='number'>0usize</span>;
-        <span class='kw'>while</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>x</span>) <span class='op'>=</span> <span class='ident'>iter</span>.<span class='ident'>next</span>() {
+        <span class='kw'>for</span> <span class='ident'>x</span> <span class='kw'>in</span> <span class='ident'>arg</span>.<span class='ident'>encode_wide</span>() {
             <span class='kw'>if</span> <span class='ident'>x</span> <span class='op'>==</span> <span class='string'>&#39;\\&#39;</span> <span class='kw'>as</span> <span class='ident'>u16</span> {
                 <span class='ident'>backslashes</span> <span class='op'>+=</span> <span class='number'>1</span>;
             } <span class='kw'>else</span> {
