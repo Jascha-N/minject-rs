@@ -118,17 +118,15 @@ impl Child {
     /// child does not block waiting for input from the parent, while
     /// the parent waits for the child to exit.
     pub fn wait_with_output(mut self) -> io::Result<Output> {
-        mem::drop(self.stdin.take());
-
         fn read<T: io::Read + Send + 'static>(stream: Option<T>) -> Receiver<io::Result<Vec<u8>>> {
             let (tx, rx) = mpsc::channel();
             match stream {
                 Some(stream) => {
                     thread::spawn(move || {
                         let mut stream = stream;
-                        let mut ret = Vec::new();
-                        let res = stream.read_to_end(&mut ret);
-                        tx.send(res.map(|_| ret)).unwrap();
+                        let mut vec = Vec::new();
+                        let res = stream.read_to_end(&mut vec);
+                        tx.send(res.map(|_| vec)).unwrap();
                     });
                 }
                 None => tx.send(Ok(Vec::new())).unwrap()
@@ -136,14 +134,16 @@ impl Child {
             rx
         }
 
+        mem::drop(self.stdin.take());
+
         let stdout = read(self.stdout.take());
         let stderr = read(self.stderr.take());
         let status = try!(self.wait());
 
         Ok(Output {
             status: status,
-            stdout: stdout.recv().unwrap().unwrap_or(Vec::new()),
-            stderr: stderr.recv().unwrap().unwrap_or(Vec::new())
+            stdout: stdout.recv().unwrap().unwrap_or_else(|_| Vec::new()),
+            stderr: stderr.recv().unwrap().unwrap_or_else(|_| Vec::new())
         })
     }
 }
@@ -686,9 +686,8 @@ fn make_command_line(prog: &OsStr, args: &[OsString]) -> Vec<u16> {
     fn append_arg(cmd: &mut Vec<u16>, arg: &OsStr) {
         cmd.push('"' as u16);
 
-        let mut iter = arg.encode_wide();
         let mut backslashes = 0usize;
-        while let Some(x) = iter.next() {
+        for x in arg.encode_wide() {
             if x == '\\' as u16 {
                 backslashes += 1;
             } else {

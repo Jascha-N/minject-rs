@@ -3,6 +3,8 @@
 //! into another process on the Windows platform.
 #![feature(custom_derive, plugin)]
 #![plugin(serde_macros)]
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 #![warn(missing_docs)]
 
 extern crate winapi as w;

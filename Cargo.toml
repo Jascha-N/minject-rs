@@ -18,3 +18,7 @@ bincode = "0.5"
 
 [dependencies.miow]
 git = "https://github.com/alexcrichton/miow"
+
+[dependencies.clippy]
+version = "*"
+optional = true

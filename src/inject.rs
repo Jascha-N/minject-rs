@@ -226,6 +226,7 @@ pub struct Module {
     init: Option<(Vec<u8>, Vec<InitArg>)>
 }
 
+#[cfg_attr(feature = "clippy", allow(new_ret_no_self))]
 impl Module {
     /// Creates a new module definition builder given the path to a module.
     pub fn new<P: AsRef<Path>>(path: P) -> ModuleBuilder {
@@ -239,7 +240,7 @@ impl Module {
                 let mut serialized_args = Vec::new();
                 for arg in args {
                     match *arg {
-                        InitArg::Serialized(ref data) => serialized_args.extend(data.iter()),
+                        InitArg::Serialized(ref data) => serialized_args.extend_from_slice(data),
                         InitArg::Handle(ref handle) => {
                             let mut copied_handle = unsafe { mem::uninitialized() };
                             let current_process = unsafe { k32::GetCurrentProcess() };
@@ -260,7 +261,7 @@ impl Module {
         let mut size = mem::size_of_val(&self.path[..]) +
                        mem::size_of::<ThreadParam>();
 
-        if let &Some((init, ref args)) = &init {
+        if let Some((init, ref args)) = init {
             size += mem::size_of_val(&init[..]) +
                     mem::size_of_val(&args[..])
         }
@@ -268,7 +269,7 @@ impl Module {
         let mut remote = try!(RemoteMemory::new(process, size, false));
         let module_path = try!(remote.write_slice(&self.path[..]));
 
-        let (init_name, user_data, user_len) = if let &Some((init, ref args)) = &init {
+        let (init_name, user_data, user_len) = if let Some((init, ref args)) = init {
             let init_name = try!(remote.write_slice(&init[..]));
             let user_data = try!(remote.write_slice(&args[..]));
 
